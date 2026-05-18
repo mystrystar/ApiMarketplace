@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ApiStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  apiKey        String         @unique
+  name          String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  apis          Api[]
+  purchases     Purchase[]
+  subscriptions Subscription[]
+  apiCallLogs   ApiCallLog[]
+}
+
+model Api {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  title        String
+  description  String?
+  baseUrl      String
+  category     String?
+  pricePerCall Float          @default(0)
+  defaultQuota Int            @default(100)
+  status       ApiStatus      @default(PENDING)
+  providerId   String
+  provider     User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  purchases    Purchase[]
+  subscriptions Subscription[]
+  apiCallLogs  ApiCallLog[]
+}
+
+model Purchase {
+  id           String        @id @default(cuid())
+  userId       String
+  apiId        String
+  amount       Float         @default(0)
+  quota        Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  api          Api           @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  subscription Subscription?
+  createdAt    DateTime      @default(now())
+
+  @@index([userId])
+  @@index([apiId])
+}
+
+model Subscription {
+  id             String             @id @default(cuid())
+  userId         String
+  apiId          String
+  purchaseId     String             @unique
+  totalQuota     Int
+  remainingQuota Int
+  status         SubscriptionStatus @default(ACTIVE)
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  api            Api                @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  purchase       Purchase           @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  apiCallLogs    ApiCallLog[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([userId, apiId])
+  @@index([userId])
+  @@index([apiId])
+}
+
+model ApiCallLog {
+  id             String       @id @default(cuid())
+  userId         String
+  apiId          String
+  subscriptionId String
+  statusCode     Int
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  api            Api          @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([userId, apiId])
+  @@index([subscriptionId])
+  @@index([createdAt])
+}

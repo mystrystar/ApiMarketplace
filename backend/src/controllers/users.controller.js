@@ -1,0 +1,108 @@
+const prisma = require('../lib/prisma');
+const { SUBSCRIPTION_STATUS } = require('../constants');
+const { generateApiKey } = require('../utils/apiKey');
+const { fetchPaginatedLogs } = require('../utils/logsQuery');
+
+async function getProfile(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        _count: { select: { apis: true } },
+      },
+    });
+
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateProfile(req, res, next) {
+  try {
+    const { name } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { name },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getDashboard(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, email: true, name: true, role: true, apiKey: true },
+    });
+
+    const subscriptions = await prisma.subscription.findMany({
+      where: { userId: req.user.id, status: SUBSCRIPTION_STATUS.ACTIVE },
+      include: {
+        api: { select: { id: true, title: true, slug: true, category: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const totalCalls = await prisma.apiCallLog.count({
+      where: { userId: req.user.id },
+    });
+
+    const recentLogs = await prisma.apiCallLog.findMany({
+      where: { userId: req.user.id },
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        api: { select: { id: true, title: true, slug: true } },
+      },
+    });
+
+    res.json({ user, subscriptions, totalCalls, recentLogs });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function regenerateApiKey(req, res, next) {
+  try {
+    const apiKey = generateApiKey();
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { apiKey },
+    });
+
+    res.json({ apiKey });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getLogs(req, res, next) {
+  try {
+    const result = await fetchPaginatedLogs(prisma, {
+      query: req.query,
+      userId: req.user.id,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  getProfile,
+  updateProfile,
+  getDashboard,
+  regenerateApiKey,
+  getLogs,
+};
