@@ -68,10 +68,33 @@ async function invoke(req, res, next) {
       });
     }
 
+    const requestedMethod = req.method.toUpperCase();
     api = await prisma.api.findFirst({
-      where: { slug: req.params.apiSlug, status: API_STATUS.APPROVED, deletedAt: null },
+      where: {
+        slug: req.params.apiSlug,
+        method: requestedMethod,
+        status: API_STATUS.APPROVED,
+        deletedAt: null,
+      },
     });
     if (!api) {
+      const apiWithDifferentMethod = await prisma.api.findFirst({
+        where: {
+          slug: req.params.apiSlug,
+          status: API_STATUS.APPROVED,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (apiWithDifferentMethod) {
+        await logCall({ req, startedAt, statusCode: 405 });
+        return res.status(405).json({
+          success: false,
+          error: ERRORS.METHOD_NOT_ALLOWED,
+        });
+      }
+
       await logCall({ req, startedAt, statusCode: 404 });
       return res.status(404).json({
         success: false,
@@ -99,14 +122,6 @@ async function invoke(req, res, next) {
           include: { user: true },
         });
       }
-    }
-
-    if (api.method && api.method.toUpperCase() !== req.method.toUpperCase()) {
-      await logCall({ req, startedAt, api, statusCode: 405 });
-      return res.status(405).json({
-        success: false,
-        error: ERRORS.METHOD_NOT_ALLOWED,
-      });
     }
 
     if (!keySubscription) {

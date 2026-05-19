@@ -40,7 +40,7 @@ model User {
 
 model Api {
   id           String         @id @default(cuid())
-  slug         String         @unique
+  slug         String
   title        String
   description  String?
   baseUrl      String?
@@ -59,6 +59,7 @@ model Api {
   subscriptions Subscription[]
   apiCallLogs  ApiCallLog[]
 
+  @@unique([slug, method])
   @@index([deletedAt])
 }
 
