@@ -14,9 +14,9 @@ import { LogsTable } from "@/components/logs/LogsTable";
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
 
-  const load = useCallback(async () => {
+  const fetchDashboard = useCallback(async () => {
     const res = await apiRequest<DashboardData>(API_PATHS.dashboard);
-    setData({
+    return {
       ...res,
       subscriptions: res.subscriptions || [],
       purchases: res.purchases || [],
@@ -24,27 +24,40 @@ export default function DashboardPage() {
       totalCalls: Number(res.totalCalls || 0),
       callsToday: Number(res.callsToday || 0),
       quotaHealth: Number(res.quotaHealth || 0),
-    });
+    };
   }, []);
 
   useEffect(() => {
-    void Promise.resolve().then(load);
+    let active = true;
+    let timer: number | undefined;
 
-    const interval = window.setInterval(() => {
-      if (!document.hidden) void load();
-    }, 2000);
+    async function refresh() {
+      if (!active || document.hidden) return;
+      const nextData = await fetchDashboard();
+      if (active) setData(nextData);
+    }
+
+    function schedule() {
+      timer = window.setTimeout(async () => {
+        await refresh();
+        if (active) schedule();
+      }, 3000);
+    }
+
+    void refresh().finally(schedule);
 
     function refreshOnFocus() {
-      void load();
+      void refresh();
     }
 
     window.addEventListener("focus", refreshOnFocus);
 
     return () => {
-      window.clearInterval(interval);
+      active = false;
+      if (timer) window.clearTimeout(timer);
       window.removeEventListener("focus", refreshOnFocus);
     };
-  }, [load]);
+  }, [fetchDashboard]);
 
   async function regenerateSubscriptionKey(subscriptionId: string) {
     const res = await apiRequest<{ apiKey: string }>(

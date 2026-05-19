@@ -23,9 +23,9 @@ export default function LogsPage() {
   const [data, setData] = useState<PaginatedLogs | null>(null);
   const [apis, setApis] = useState<ApiItem[]>([]);
 
-  const load = useCallback(async () => {
+  const fetchLogs = useCallback(async () => {
     const path = isAdmin ? API_PATHS.adminLogs : API_PATHS.userLogs;
-    const res = await apiRequest<PaginatedLogs>(path, {
+    return apiRequest<PaginatedLogs>(path, {
       params: {
         page,
         limit: DEFAULT_PAGE_SIZE,
@@ -35,27 +35,39 @@ export default function LogsPage() {
         to: filters.to ? `${filters.to}T23:59:59` : undefined,
       },
     });
-    setData(res);
   }, [isAdmin, page, filters]);
 
   useEffect(() => {
-    void Promise.resolve().then(load);
+    let active = true;
+    let timer: number | undefined;
 
-    const interval = window.setInterval(() => {
-      if (!document.hidden) void load();
-    }, 3000);
+    async function refresh() {
+      if (!active || document.hidden) return;
+      const nextData = await fetchLogs();
+      if (active) setData(nextData);
+    }
+
+    function schedule() {
+      timer = window.setTimeout(async () => {
+        await refresh();
+        if (active) schedule();
+      }, 5000);
+    }
+
+    void refresh().finally(schedule);
 
     function refreshOnFocus() {
-      void load();
+      void refresh();
     }
 
     window.addEventListener("focus", refreshOnFocus);
 
     return () => {
-      window.clearInterval(interval);
+      active = false;
+      if (timer) window.clearTimeout(timer);
       window.removeEventListener("focus", refreshOnFocus);
     };
-  }, [load]);
+  }, [fetchLogs]);
 
   useEffect(() => {
     async function loadApis() {

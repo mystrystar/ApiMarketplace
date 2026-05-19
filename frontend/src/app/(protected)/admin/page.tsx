@@ -14,10 +14,10 @@ export default function AdminPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
 
-  const load = useCallback(async () => {
+  const fetchAnalytics = useCallback(async () => {
     if (user?.role !== "ADMIN") return;
     const res = await apiRequest<Analytics>(API_PATHS.adminAnalytics);
-    setAnalytics({
+    return {
       ...res,
       totalUsers: Number(res.totalUsers || 0),
       totalApis: Number(res.totalApis || 0),
@@ -26,7 +26,7 @@ export default function AdminPage() {
       topApis: res.topApis || [],
       topUsers: res.topUsers || [],
       recentUsers: res.recentUsers || [],
-    });
+    };
   }, [user]);
 
   useEffect(() => {
@@ -38,23 +38,36 @@ export default function AdminPage() {
   useEffect(() => {
     if (user?.role !== "ADMIN") return;
 
-    void Promise.resolve().then(load);
+    let active = true;
+    let timer: number | undefined;
 
-    const interval = window.setInterval(() => {
-      if (!document.hidden) void load();
-    }, 2000);
+    async function refresh() {
+      if (!active || document.hidden) return;
+      const nextAnalytics = await fetchAnalytics();
+      if (active && nextAnalytics) setAnalytics(nextAnalytics);
+    }
+
+    function schedule() {
+      timer = window.setTimeout(async () => {
+        await refresh();
+        if (active) schedule();
+      }, 3000);
+    }
+
+    void refresh().finally(schedule);
 
     function refreshOnFocus() {
-      void load();
+      void refresh();
     }
 
     window.addEventListener("focus", refreshOnFocus);
 
     return () => {
-      window.clearInterval(interval);
+      active = false;
+      if (timer) window.clearTimeout(timer);
       window.removeEventListener("focus", refreshOnFocus);
     };
-  }, [user, load]);
+  }, [user, fetchAnalytics]);
 
   if (!analytics) {
     return <p className="text-sm text-[var(--text-muted)]">Loading...</p>;
