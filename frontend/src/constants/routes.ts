@@ -9,6 +9,7 @@ export const ROUTES = {
   adminApis: "/admin/apis",
   adminUsers: "/admin/users",
   adminPurchases: "/admin/purchases",
+  apiDocs: (id: string) => `/marketplace/${id}/docs`,
 } as const;
 
 import type { Role } from "@/types";

@@ -40,7 +40,8 @@ export function Sidebar() {
       <nav className="grid flex-1 grid-cols-4 gap-1 md:flex md:flex-col">
         {links.map((item) => {
           const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+            pathname === item.href ||
+            (item.href !== ROUTES.admin && pathname.startsWith(`${item.href}/`));
           return (
             <Link
               key={item.href}

@@ -13,6 +13,7 @@ import { LogsTable } from "@/components/logs/LogsTable";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [refillingId, setRefillingId] = useState<string | null>(null);
 
   const fetchDashboard = useCallback(async () => {
     const res = await apiRequest<DashboardData>(API_PATHS.dashboard);
@@ -76,6 +77,16 @@ export default function DashboardPage() {
     );
   }
 
+  async function refillQuota(apiId: string) {
+    setRefillingId(apiId);
+    try {
+      await apiRequest(API_PATHS.apiPurchase(apiId), { method: "POST" });
+      setData(await fetchDashboard());
+    } finally {
+      setRefillingId(null);
+    }
+  }
+
   if (!data) {
     return <p className="text-sm text-[var(--text-muted)]">Loading...</p>;
   }
@@ -94,6 +105,8 @@ export default function DashboardPage() {
           <SubscriptionList
             items={data.subscriptions}
             onRegenerateKey={regenerateSubscriptionKey}
+            onRefill={refillQuota}
+            refillingId={refillingId}
           />
         </Card>
         <Card title={DASHBOARD_LABELS.recentActivity}>

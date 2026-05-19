@@ -4,6 +4,7 @@ const API_PUBLIC_SELECT = {
   title: true,
   description: true,
   baseUrl: true,
+  method: true,
   category: true,
   pricePerCall: true,
   defaultQuota: true,

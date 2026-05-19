@@ -83,6 +83,7 @@ async function main() {
         description: 'Sample weather data API',
         baseUrl:
           'https://api.example.com/weather',
+        method: 'POST',
         category: 'data',
         pricePerCall: 0.01,
         defaultQuota: 10,

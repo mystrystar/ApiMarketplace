@@ -7,7 +7,7 @@ const { generateApiKey, hashApiKey } = require('../utils/apiKey');
 async function listApproved(req, res, next) {
   try {
     const { category, search } = req.query;
-    const where = { status: API_STATUS.APPROVED };
+    const where = { status: API_STATUS.APPROVED, deletedAt: null };
 
     if (category) where.category = category;
     if (search) {
@@ -35,7 +35,7 @@ async function listApproved(req, res, next) {
 async function getOne(req, res, next) {
   try {
     const api = await prisma.api.findFirst({
-      where: { id: req.params.id, status: API_STATUS.APPROVED },
+      where: { id: req.params.id, status: API_STATUS.APPROVED, deletedAt: null },
       select: API_PUBLIC_SELECT,
     });
 
@@ -57,13 +57,13 @@ async function getOne(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const { title, description, baseUrl, category, pricePerCall, slug, defaultQuota } =
+    const { title, description, baseUrl, method, category, pricePerCall, slug, defaultQuota } =
       req.body;
 
-    if (!title || !baseUrl) {
+    if (!title) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Title and baseUrl are required' },
+        error: { code: 'VALIDATION_ERROR', message: 'Title is required' },
       });
     }
 
@@ -80,7 +80,10 @@ async function create(req, res, next) {
         slug: apiSlug,
         title,
         description,
-        baseUrl,
+        baseUrl: baseUrl?.trim() || null,
+        method: ['GET', 'POST'].includes(String(method || '').toUpperCase())
+          ? String(method).toUpperCase()
+          : 'POST',
         category,
         pricePerCall: pricePerCall ?? 0,
         defaultQuota: defaultQuota ?? 100,
@@ -101,7 +104,7 @@ async function create(req, res, next) {
 async function listMine(req, res, next) {
   try {
     const apis = await prisma.api.findMany({
-      where: { providerId: req.user.id },
+      where: { providerId: req.user.id, deletedAt: null },
       select: API_PUBLIC_SELECT,
       orderBy: { createdAt: 'desc' },
     });
@@ -118,7 +121,7 @@ async function listMine(req, res, next) {
 async function updateMine(req, res, next) {
   try {
     const existing = await prisma.api.findFirst({
-      where: { id: req.params.id, providerId: req.user.id },
+      where: { id: req.params.id, providerId: req.user.id, deletedAt: null },
     });
 
     if (!existing) {
@@ -128,14 +131,17 @@ async function updateMine(req, res, next) {
       });
     }
 
-    const { title, description, baseUrl, category, pricePerCall } = req.body;
+    const { title, description, baseUrl, method, category, pricePerCall } = req.body;
 
     const api = await prisma.api.update({
       where: { id: existing.id },
       data: {
         title,
         description,
-        baseUrl,
+        baseUrl: baseUrl?.trim() || null,
+        method: ['GET', 'POST'].includes(String(method || '').toUpperCase())
+          ? String(method).toUpperCase()
+          : undefined,
         category,
         pricePerCall,
         status: API_STATUS.PENDING,
@@ -155,7 +161,7 @@ async function updateMine(req, res, next) {
 async function removeMine(req, res, next) {
   try {
     const existing = await prisma.api.findFirst({
-      where: { id: req.params.id, providerId: req.user.id },
+      where: { id: req.params.id, providerId: req.user.id, deletedAt: null },
     });
 
     if (!existing) {
@@ -165,7 +171,10 @@ async function removeMine(req, res, next) {
       });
     }
 
-    await prisma.api.delete({ where: { id: existing.id } });
+    await prisma.api.update({
+      where: { id: existing.id },
+      data: { deletedAt: new Date() },
+    });
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -175,7 +184,7 @@ async function removeMine(req, res, next) {
 async function purchase(req, res, next) {
   try {
     const api = await prisma.api.findFirst({
-      where: { id: req.params.id, status: API_STATUS.APPROVED },
+      where: { id: req.params.id, status: API_STATUS.APPROVED, deletedAt: null },
     });
 
     if (!api) {

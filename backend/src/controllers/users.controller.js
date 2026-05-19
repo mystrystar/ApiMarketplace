@@ -55,7 +55,17 @@ async function getDashboard(req, res, next) {
     const subscriptions = await prisma.subscription.findMany({
       where: { userId: req.user.id, status: SUBSCRIPTION_STATUS.ACTIVE },
       include: {
-        api: { select: { id: true, title: true, slug: true, category: true, status: true } },
+        api: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            category: true,
+            status: true,
+            method: true,
+            defaultQuota: true,
+          },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });

@@ -19,7 +19,8 @@ export interface ApiItem {
   slug: string;
   title: string;
   description?: string | null;
-  baseUrl: string;
+  baseUrl?: string | null;
+  method: "GET" | "POST";
   category?: string | null;
   pricePerCall: number;
   defaultQuota: number;
@@ -39,8 +40,10 @@ export interface Subscription {
     id: string;
     title: string;
     slug: string;
+    method?: string;
     category?: string | null;
     status?: string;
+    defaultQuota?: number;
   };
 }
 

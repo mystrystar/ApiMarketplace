@@ -2,6 +2,10 @@ const prisma = require('../lib/prisma');
 const { API_STATUS, ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
 const { hashApiKey } = require('../utils/apiKey');
 
+const RATE_LIMIT_WINDOW_MS = 1000;
+const RATE_LIMIT_MAX_CALLS = 10;
+const rateLimitBuckets = new Map();
+
 function getIpAddress(req) {
   const forwardedFor = req.headers['x-forwarded-for'];
   if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
@@ -16,6 +20,22 @@ function getResponseTimeMs(startedAt) {
 
 function getApiName(api, apiSlug) {
   return api?.title || api?.slug || apiSlug || 'unknown';
+}
+
+function isRateLimited(apiKeyHash) {
+  const now = Date.now();
+  const bucket = (rateLimitBuckets.get(apiKeyHash) || []).filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS,
+  );
+
+  if (bucket.length >= RATE_LIMIT_MAX_CALLS) {
+    rateLimitBuckets.set(apiKeyHash, bucket);
+    return true;
+  }
+
+  bucket.push(now);
+  rateLimitBuckets.set(apiKeyHash, bucket);
+  return false;
 }
 
 async function logCall({ req, startedAt, user, api, subscription, statusCode }) {
@@ -49,7 +69,7 @@ async function invoke(req, res, next) {
     }
 
     api = await prisma.api.findFirst({
-      where: { slug: req.params.apiSlug, status: API_STATUS.APPROVED },
+      where: { slug: req.params.apiSlug, status: API_STATUS.APPROVED, deletedAt: null },
     });
     if (!api) {
       await logCall({ req, startedAt, statusCode: 404 });
@@ -81,6 +101,14 @@ async function invoke(req, res, next) {
       }
     }
 
+    if (api.method && api.method.toUpperCase() !== req.method.toUpperCase()) {
+      await logCall({ req, startedAt, api, statusCode: 405 });
+      return res.status(405).json({
+        success: false,
+        error: ERRORS.METHOD_NOT_ALLOWED,
+      });
+    }
+
     if (!keySubscription) {
       await logCall({ req, startedAt, api, statusCode: 401 });
       return res.status(401).json({
@@ -90,6 +118,14 @@ async function invoke(req, res, next) {
     }
 
     user = keySubscription.user;
+
+    if (isRateLimited(apiKeyHash)) {
+      await logCall({ req, startedAt, user, api, statusCode: 429 });
+      return res.status(429).json({
+        success: false,
+        error: ERRORS.RATE_LIMITED,
+      });
+    }
 
     subscription = await prisma.subscription.findFirst({
       where: {

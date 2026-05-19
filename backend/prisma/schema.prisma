@@ -43,7 +43,8 @@ model Api {
   slug         String         @unique
   title        String
   description  String?
-  baseUrl      String
+  baseUrl      String?
+  method       String         @default("POST")
   category     String?
   pricePerCall Decimal        @default(0)
   defaultQuota Int            @default(100)

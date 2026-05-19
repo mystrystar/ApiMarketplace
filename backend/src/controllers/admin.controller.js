@@ -64,7 +64,16 @@ async function getUserDetails(req, res, next) {
       prisma.subscription.findMany({
         where: { userId: user.id },
         include: {
-          api: { select: { id: true, title: true, slug: true, status: true } },
+          api: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              status: true,
+              method: true,
+              defaultQuota: true,
+            },
+          },
         },
         orderBy: { updatedAt: 'desc' },
       }),
@@ -91,6 +100,7 @@ async function getUserDetails(req, res, next) {
 async function listApis(req, res, next) {
   try {
     const apis = await prisma.api.findMany({
+      where: { deletedAt: null },
       include: {
         provider: { select: { id: true, email: true, name: true } },
         _count: { select: { purchases: true, apiCallLogs: true } },
@@ -113,6 +123,7 @@ async function createApi(req, res, next) {
       title,
       description,
       baseUrl,
+      method,
       category,
       pricePerCall,
       slug,
@@ -121,10 +132,10 @@ async function createApi(req, res, next) {
       status,
     } = req.body;
 
-    if (!title || !baseUrl) {
+    if (!title) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Title and baseUrl are required' },
+        error: { code: 'VALIDATION_ERROR', message: 'Title is required' },
       });
     }
 
@@ -141,7 +152,10 @@ async function createApi(req, res, next) {
         slug: apiSlug,
         title,
         description,
-        baseUrl,
+        baseUrl: baseUrl?.trim() || null,
+        method: ['GET', 'POST'].includes(String(method || '').toUpperCase())
+          ? String(method).toUpperCase()
+          : 'POST',
         category,
         pricePerCall: pricePerCall ?? 0,
         defaultQuota: defaultQuota ?? 100,
@@ -166,6 +180,7 @@ async function updateApi(req, res, next) {
       title,
       description,
       baseUrl,
+      method,
       category,
       pricePerCall,
       defaultQuota,
@@ -178,7 +193,10 @@ async function updateApi(req, res, next) {
       data: {
         title,
         description,
-        baseUrl,
+        baseUrl: baseUrl?.trim() || null,
+        method: ['GET', 'POST'].includes(String(method || '').toUpperCase())
+          ? String(method).toUpperCase()
+          : undefined,
         category,
         pricePerCall,
         defaultQuota,
@@ -205,7 +223,7 @@ async function updateApi(req, res, next) {
 async function listPendingApis(req, res, next) {
   try {
     const apis = await prisma.api.findMany({
-      where: { status: 'PENDING' },
+      where: { status: 'PENDING', deletedAt: null },
       include: {
         provider: { select: { id: true, email: true, name: true } },
       },
@@ -312,7 +330,7 @@ async function getAnalytics(req, res, next) {
 
     const [totalUsers, totalApis, recentUsers] = await Promise.all([
       prisma.user.count(),
-      prisma.api.count(),
+      prisma.api.count({ where: { deletedAt: null } }),
       prisma.user.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },

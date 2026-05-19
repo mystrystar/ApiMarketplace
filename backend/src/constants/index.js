@@ -25,6 +25,8 @@ module.exports = {
     INVALID_API_KEY: { code: 'INVALID_API_KEY', message: 'Invalid API key' },
     NO_SUBSCRIPTION: { code: 'NO_SUBSCRIPTION', message: 'No active subscription for this API' },
     QUOTA_EXHAUSTED: { code: 'QUOTA_EXHAUSTED', message: 'Quota exhausted' },
+    METHOD_NOT_ALLOWED: { code: 'METHOD_NOT_ALLOWED', message: 'This API does not support the requested HTTP method' },
+    RATE_LIMITED: { code: 'RATE_LIMITED', message: 'Rate limit exceeded. Try again in a moment' },
     ACTIVE_QUOTA_EXISTS: { code: 'ACTIVE_QUOTA_EXISTS', message: 'You can purchase this API again only after the current quota is exhausted' },
   },
 };

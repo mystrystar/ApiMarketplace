@@ -7,6 +7,7 @@ export const API_PATHS = {
   register: "/auth/register",
   me: "/auth/me",
   apis: "/apis",
+  api: (id: string) => `/apis/${id}`,
   apiPurchase: (id: string) => `/apis/${id}/purchase`,
   dashboard: "/users/dashboard",
   regenerateSubscriptionKey: (id: string) =>

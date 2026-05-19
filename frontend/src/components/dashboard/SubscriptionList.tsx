@@ -7,9 +7,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 export function SubscriptionList({
   items,
   onRegenerateKey,
+  onRefill,
+  refillingId,
 }: {
   items: Subscription[];
   onRegenerateKey?: (subscriptionId: string) => Promise<void>;
+  onRefill?: (apiId: string) => Promise<void>;
+  refillingId?: string | null;
 }) {
   if (!items.length) {
     return (
@@ -26,24 +30,47 @@ export function SubscriptionList({
 
   return (
     <ul className="space-y-2">
-      {items.map((sub) => (
+      {items.map((sub) => {
+        const exhausted = Number(sub.remainingQuota || 0) <= 0;
+        const packSize = Number(sub.api.defaultQuota || sub.totalQuota || 0);
+        const packCount = packSize
+          ? Math.max(1, Math.round(Number(sub.totalQuota || 0) / packSize))
+          : 1;
+
+        return (
         <li key={sub.id} className="mb-3 space-y-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-sm transition hover:border-[var(--border-h)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-semibold">{sub.api.title}</span>
             <div className="flex flex-wrap items-center gap-3">
-              <MethodBadge />
+              <MethodBadge method={sub.api.method} />
               <span className="rounded-md bg-[rgba(0,0,0,0.3)] px-2 py-[3px] font-mono text-[11px] text-[#7eb8ff]">/v1/{sub.api.slug}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             {sub.api.status && (
-              <span className="rounded-full bg-[var(--green-dim)] px-2 py-[3px] text-[10px] font-bold text-[var(--green)]">
-                {sub.api.status}
+              <span
+                className={`rounded-full px-2 py-[3px] text-[10px] font-bold ${
+                  exhausted
+                    ? "bg-[var(--red-dim)] text-[var(--red)]"
+                    : "bg-[var(--green-dim)] text-[var(--green)]"
+                }`}
+              >
+                {exhausted ? "QUOTA EXHAUSTED" : sub.api.status}
               </span>
             )}
             <span className="font-mono text-[11px] text-[var(--muted)]">
-              {sub.remainingQuota} / {sub.totalQuota} calls remaining
+              {sub.remainingQuota} calls available
             </span>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.8px]">
+            <span className="rounded-full bg-[rgba(79,142,255,0.12)] px-2 py-[3px] text-[#7eb8ff]">
+              {packCount} {packCount === 1 ? "quota pack" : "quota packs"}
+            </span>
+            {packSize > 0 && (
+              <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-[3px] text-[var(--muted)]">
+                {packSize} calls per refill
+              </span>
+            )}
           </div>
           <div className="h-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
             <div
@@ -78,10 +105,19 @@ export function SubscriptionList({
                   {DASHBOARD_LABELS.regenerate}
                 </Button>
               )}
+              {exhausted && onRefill && (
+                <Button
+                  onClick={() => onRefill(sub.api.id)}
+                  disabled={refillingId === sub.api.id}
+                >
+                  {refillingId === sub.api.id ? "Refilling..." : "Refill quota"}
+                </Button>
+              )}
             </div>
           </div>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

@@ -34,7 +34,7 @@ export function ApiTable({ apis, onEdit, onDelete }: Props) {
                 /v1/{api.slug}
               </td>
               <td className="px-3 py-2">
-                <MethodBadge />
+                <MethodBadge method={api.method} />
               </td>
               <td className="px-3 py-2 font-mono">
                 {"\u20b9"}

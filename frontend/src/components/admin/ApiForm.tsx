@@ -11,6 +11,7 @@ export type ApiFormData = {
   slug: string;
   description: string;
   baseUrl: string;
+  method: string;
   category: string;
   pricePerCall: string;
   defaultQuota: string;
@@ -23,6 +24,7 @@ export const emptyApiForm = (): ApiFormData => ({
   slug: "",
   description: "",
   baseUrl: "",
+  method: "POST",
   category: "",
   pricePerCall: "0",
   defaultQuota: "100",
@@ -34,7 +36,8 @@ export const apiToForm = (api: ApiItem): ApiFormData => ({
   title: api.title,
   slug: api.slug,
   description: api.description || "",
-  baseUrl: api.baseUrl,
+  baseUrl: api.baseUrl || "",
+  method: api.method || "POST",
   category: api.category || "",
   pricePerCall: String(api.pricePerCall),
   defaultQuota: String(api.defaultQuota),
@@ -67,7 +70,16 @@ export function ApiForm({ form, onChange, onSubmit, onCancel, loading }: Props) 
       <Input label={ADMIN_LABELS.titleField} value={form.title} onChange={(e) => set("title", e.target.value)} required />
       <Input label={ADMIN_LABELS.slug} value={form.slug} onChange={(e) => set("slug", e.target.value)} />
       <Input label={ADMIN_LABELS.description} value={form.description} onChange={(e) => set("description", e.target.value)} className="sm:col-span-2" />
-      <Input label={ADMIN_LABELS.baseUrl} value={form.baseUrl} onChange={(e) => set("baseUrl", e.target.value)} required className="sm:col-span-2" />
+      <Input label={ADMIN_LABELS.baseUrl} value={form.baseUrl} onChange={(e) => set("baseUrl", e.target.value)} placeholder="Optional upstream endpoint" className="sm:col-span-2" />
+      <Select
+        label={ADMIN_LABELS.methodField}
+        value={form.method}
+        onChange={(e) => set("method", e.target.value)}
+        options={[
+          { value: "POST", label: "POST" },
+          { value: "GET", label: "GET" },
+        ]}
+      />
       <Input label={ADMIN_LABELS.category} value={form.category} onChange={(e) => set("category", e.target.value)} />
       <Input label={ADMIN_LABELS.pricePerCall} type="number" step="0.0001" value={form.pricePerCall} onChange={(e) => set("pricePerCall", e.target.value)} />
       <Input label={ADMIN_LABELS.defaultQuota} type="number" value={form.defaultQuota} onChange={(e) => set("defaultQuota", e.target.value)} />

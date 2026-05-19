@@ -15,7 +15,7 @@ export default function MarketplacePage() {
   const [category, setCategory] = useState("");
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [subscribedIds, setSubscribedIds] = useState<string[]>([]);
+  const [quotaByApiId, setQuotaByApiId] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
     const data = await apiRequest<{ apis: ApiItem[] }>(API_PATHS.apis, {
@@ -29,13 +29,21 @@ export default function MarketplacePage() {
     return () => clearTimeout(t);
   }, [load]);
 
-  useEffect(() => {
-    apiRequest<DashboardData>(API_PATHS.dashboard).then((data) => {
-      setSubscribedIds(
-        (data.subscriptions || []).map((subscription) => subscription.api.id),
-      );
-    });
+  const loadSubscriptionState = useCallback(async () => {
+    const data = await apiRequest<DashboardData>(API_PATHS.dashboard);
+    setQuotaByApiId(
+      Object.fromEntries(
+        (data.subscriptions || []).map((subscription) => [
+          subscription.api.id,
+          Number(subscription.remainingQuota || 0),
+        ]),
+      ),
+    );
   }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadSubscriptionState);
+  }, [loadSubscriptionState]);
 
   const categories = useMemo(
     () =>
@@ -48,8 +56,8 @@ export default function MarketplacePage() {
     setMessage("");
     try {
       await apiRequest(API_PATHS.apiPurchase(id), { method: "POST" });
-      setMessage("Purchase successful. Check your dashboard.");
-      setSubscribedIds((prev) => [...new Set([...prev, id])]);
+      setMessage("Quota added. Check your dashboard.");
+      await loadSubscriptionState();
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Purchase failed");
     } finally {
@@ -78,7 +86,8 @@ export default function MarketplacePage() {
               api={api}
               onBuy={handleBuy}
               buying={buyingId === api.id}
-              subscribed={subscribedIds.includes(api.id)}
+              subscribed={quotaByApiId[api.id] !== undefined}
+              remainingQuota={quotaByApiId[api.id]}
             />
           ))}
         </div>
