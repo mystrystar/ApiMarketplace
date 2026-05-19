@@ -53,6 +53,7 @@ export async function apiRequest<T>(
   const res = await fetch(url.toString(), {
     method,
     headers,
+    cache: "no-store",
     body: body ? JSON.stringify(body) : undefined,
   });
 

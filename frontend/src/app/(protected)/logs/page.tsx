@@ -40,6 +40,21 @@ export default function LogsPage() {
 
   useEffect(() => {
     void Promise.resolve().then(load);
+
+    const interval = window.setInterval(() => {
+      if (!document.hidden) void load();
+    }, 3000);
+
+    function refreshOnFocus() {
+      void load();
+    }
+
+    window.addEventListener("focus", refreshOnFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshOnFocus);
+    };
   }, [load]);
 
   useEffect(() => {
