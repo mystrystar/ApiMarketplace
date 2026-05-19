@@ -32,11 +32,11 @@ export default function AdminApisPage() {
 
   const load = useCallback(async () => {
     const res = await apiRequest<{ apis: ApiItem[] }>(API_PATHS.adminApis);
-    setApis(res.apis);
+    setApis(res.apis || []);
   }, []);
 
   useEffect(() => {
-    if (user?.role === "ADMIN") load();
+    if (user?.role === "ADMIN") void Promise.resolve().then(load);
   }, [user, load]);
 
   async function handleSubmit() {
@@ -59,8 +59,8 @@ export default function AdminApisPage() {
       description: form.description,
       baseUrl: form.baseUrl,
       category: form.category,
-      pricePerCall: parseFloat(form.pricePerCall),
-      defaultQuota: parseInt(form.defaultQuota, 10),
+      pricePerCall: Number(form.pricePerCall || 0),
+      defaultQuota: Number(form.defaultQuota || 100),
       dummyResponse,
       status: form.status,
     };

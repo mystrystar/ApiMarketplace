@@ -45,7 +45,7 @@ model Api {
   description  String?
   baseUrl      String
   category     String?
-  pricePerCall Decimal        @default(0) @db.Decimal(10, 4)
+  pricePerCall Decimal        @default(0)
   defaultQuota Int            @default(100)
   dummyResponse Json?
   status       ApiStatus      @default(PENDING)
@@ -65,7 +65,7 @@ model Purchase {
   id           String        @id @default(cuid())
   userId       String
   apiId        String
-  amount       Decimal       @default(0) @db.Decimal(10, 4)
+  amount       Decimal       @default(0)
   quota        Int
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   api          Api           @relation(fields: [apiId], references: [id], onDelete: Cascade)

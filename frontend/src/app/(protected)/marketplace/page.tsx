@@ -21,7 +21,7 @@ export default function MarketplacePage() {
     const data = await apiRequest<{ apis: ApiItem[] }>(API_PATHS.apis, {
       params: { search: search || undefined, category: category || undefined },
     });
-    setApis(data.apis);
+    setApis(data.apis || []);
   }, [search, category]);
 
   useEffect(() => {
@@ -31,7 +31,9 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     apiRequest<DashboardData>(API_PATHS.dashboard).then((data) => {
-      setSubscribedIds(data.subscriptions.map((subscription) => subscription.api.id));
+      setSubscribedIds(
+        (data.subscriptions || []).map((subscription) => subscription.api.id),
+      );
     });
   }, []);
 

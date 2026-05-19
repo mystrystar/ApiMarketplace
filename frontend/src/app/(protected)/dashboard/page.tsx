@@ -16,11 +16,19 @@ export default function DashboardPage() {
 
   const load = useCallback(async () => {
     const res = await apiRequest<DashboardData>(API_PATHS.dashboard);
-    setData(res);
+    setData({
+      ...res,
+      subscriptions: res.subscriptions || [],
+      purchases: res.purchases || [],
+      recentLogs: res.recentLogs || [],
+      totalCalls: Number(res.totalCalls || 0),
+      callsToday: Number(res.callsToday || 0),
+      quotaHealth: Number(res.quotaHealth || 0),
+    });
   }, []);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [load]);
 
   async function regenerateSubscriptionKey(subscriptionId: string) {

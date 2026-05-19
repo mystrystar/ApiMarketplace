@@ -25,13 +25,20 @@ export function ApiTable({ apis, onEdit, onDelete }: Props) {
         </thead>
         <tbody>
           {apis.map((api) => (
-            <tr key={api.id} className="border-b border-[var(--border)] transition hover:bg-[rgba(79,142,255,0.04)]">
+            <tr
+              key={api.id}
+              className="border-b border-[var(--border)] transition hover:bg-[rgba(79,142,255,0.04)]"
+            >
               <td className="px-4 py-[14px]">{api.title}</td>
-              <td className="px-3 py-2 font-mono text-xs text-[#7eb8ff]">/v1/{api.slug}</td>
-              <td className="px-3 py-2"><MethodBadge /></td>
+              <td className="px-3 py-2 font-mono text-xs text-[#7eb8ff]">
+                /v1/{api.slug}
+              </td>
+              <td className="px-3 py-2">
+                <MethodBadge />
+              </td>
               <td className="px-3 py-2 font-mono">
                 {"\u20b9"}
-                {api.pricePerCall.toFixed(4)}
+                {Number(api.pricePerCall || 0).toFixed(4)}/call
               </td>
               <td className="px-3 py-2 text-[var(--muted)]">{api.status}</td>
               <td className="px-3 py-2 space-x-2">

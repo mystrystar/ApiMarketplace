@@ -17,6 +17,15 @@ type RequestOptions = {
   params?: Record<string, string | number | undefined>;
 };
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return "Request failed";
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
@@ -52,8 +61,8 @@ export async function apiRequest<T>(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new ApiError(res.status, data.error || "Request failed");
+    throw new ApiError(res.status, getErrorMessage(data.error));
   }
 
-  return data as T;
+  return (data.data ?? data) as T;
 }

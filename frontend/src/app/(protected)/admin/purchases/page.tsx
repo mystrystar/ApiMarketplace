@@ -26,8 +26,8 @@ export default function AdminPurchasesPage() {
 
   useEffect(() => {
     if (user?.role === "ADMIN") {
-      apiRequest<{ purchases: Purchase[] }>(API_PATHS.adminPurchases).then((r) =>
-        setPurchases(r.purchases),
+      apiRequest<{ purchases: Purchase[] }>(API_PATHS.adminPurchases).then(
+        (r) => setPurchases(r.purchases || []),
       );
     }
   }, [user]);
@@ -36,7 +36,10 @@ export default function AdminPurchasesPage() {
     const res = await apiRequest<AdminUserDetails>(API_PATHS.adminUser(id));
     setSelected(res);
   }
-  const revenue = purchases.reduce((sum, purchase) => sum + purchase.amount, 0);
+  const revenue = purchases.reduce(
+    (sum, purchase) => sum + Number(purchase.amount || 0),
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -45,7 +48,7 @@ export default function AdminPurchasesPage() {
         action={
           <span className="rounded-full bg-[var(--green-dim)] px-[14px] py-1 font-mono text-xs text-[var(--green)]">
             {"\u20b9"}
-            {revenue.toFixed(2)}
+            {Number(revenue || 0).toFixed(2)}
           </span>
         }
       />
@@ -59,7 +62,8 @@ export default function AdminPurchasesPage() {
           <Card title={`${ADMIN_LABELS.userDetails}: ${selected.user.email}`}>
             <div className="space-y-2 text-sm">
               <p className="text-[var(--text-muted)]">
-                Selected from purchase history. Their subscriptions and recent calls are shown below.
+                Selected from purchase history. Their subscriptions and recent
+                calls are shown below.
               </p>
               <p className="inline-flex rounded-full bg-[rgba(79,142,255,0.12)] px-2 py-1 text-xs text-[#7eb8ff]">
                 {selected.user.role}

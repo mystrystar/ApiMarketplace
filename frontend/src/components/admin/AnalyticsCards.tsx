@@ -3,7 +3,9 @@ import type { Analytics } from "@/types";
 import { Card } from "@/components/ui/Card";
 
 export function AnalyticsCards({ data }: { data: Analytics }) {
-  const maxCalls = Math.max(...data.topApis.map((api) => api.count), 1);
+  const topApis = data.topApis || [];
+  const recentUsers = data.recentUsers || [];
+  const maxCalls = Math.max(...topApis.map((api) => Number(api.count || 0)), 1);
   const stats = [
     {
       label: ADMIN_LABELS.totalUsers,
@@ -19,7 +21,7 @@ export function AnalyticsCards({ data }: { data: Analytics }) {
     },
     {
       label: ADMIN_LABELS.revenue,
-      value: `\u20b9${data.revenue.toFixed(2)}`,
+      value: `\u20b9${Number(data.revenue || 0).toFixed(2)}`,
       icon: "RS",
       tone: "bg-[var(--green-dim)] text-[var(--green)]",
     },
@@ -52,7 +54,7 @@ export function AnalyticsCards({ data }: { data: Analytics }) {
       <div className="grid gap-4 md:grid-cols-2">
         <Card title={ADMIN_LABELS.topApis}>
           <ul className="divide-y divide-[var(--border)] text-sm">
-            {data.topApis.map((api) => (
+            {topApis.map((api) => (
               <li
                 key={api.apiId || api.title}
                 className="flex items-center justify-between gap-4 py-3"
@@ -62,33 +64,33 @@ export function AnalyticsCards({ data }: { data: Analytics }) {
                   <span className="h-1 w-20 overflow-hidden rounded bg-[var(--accent-dim)]">
                     <span
                       className="block h-full rounded bg-[var(--accent)]"
-                      style={{ width: `${(api.count / maxCalls) * 100}%` }}
+                      style={{ width: `${(Number(api.count || 0) / maxCalls) * 100}%` }}
                     />
                   </span>
                   <span className="w-8 text-right font-mono text-[var(--accent)]">
-                    {api.count}
+                    {Number(api.count || 0)}
                   </span>
                 </span>
               </li>
             ))}
-            {!data.topApis.length && <li className="py-3 text-[var(--muted)]">No data</li>}
+            {!topApis.length && <li className="py-3 text-[var(--muted)]">No data</li>}
           </ul>
         </Card>
 
         <Card title={ADMIN_LABELS.recentUsers}>
           <ul className="divide-y divide-[var(--border)] text-sm">
-            {data.recentUsers.map((user) => (
+            {recentUsers.map((user) => (
               <li key={user.id} className="flex items-center gap-3 py-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--accent-dim)] text-xs font-semibold text-[var(--accent)]">
-                  {user.email.charAt(0).toUpperCase()}
+                  {(user.email || "?").charAt(0).toUpperCase()}
                 </span>
-                <span className="truncate text-[13px]">{user.email}</span>
+                <span className="truncate text-[13px]">{user.email || "Unknown"}</span>
                 <span className="ml-auto font-mono text-[11px] text-[var(--muted)]">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </span>
               </li>
             ))}
-            {!data.recentUsers.length && (
+            {!recentUsers.length && (
               <li className="py-3 text-[var(--muted)]">No data</li>
             )}
           </ul>

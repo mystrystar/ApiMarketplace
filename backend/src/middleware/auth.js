@@ -5,7 +5,7 @@ const { ERRORS } = require('../constants');
 async function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: ERRORS.AUTH_REQUIRED });
+    return res.status(401).json({ success: false, error: ERRORS.AUTH_REQUIRED });
   }
 
   const token = header.slice(7);
@@ -18,13 +18,13 @@ async function authenticate(req, res, next) {
     });
 
     if (!user) {
-      return res.status(401).json({ error: ERRORS.INVALID_TOKEN });
+      return res.status(401).json({ success: false, error: ERRORS.INVALID_TOKEN });
     }
 
     req.user = user;
     next();
   } catch {
-    return res.status(401).json({ error: ERRORS.INVALID_TOKEN });
+    return res.status(401).json({ success: false, error: ERRORS.INVALID_TOKEN });
   }
 }
 

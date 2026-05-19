@@ -21,7 +21,9 @@ export function ApiCard({ api, onBuy, buying, subscribed }: Props) {
         </span>
         <MethodBadge method={HTTP_METHOD} />
       </div>
-      <h3 className="mt-3 text-base font-semibold text-[var(--text)]">{api.title}</h3>
+      <h3 className="mt-3 text-base font-semibold text-[var(--text)]">
+        {api.title}
+      </h3>
       <p className="mt-1 min-h-8 flex-1 text-xs text-[var(--muted)]">
         {api.description || "No description"}
       </p>
@@ -29,7 +31,9 @@ export function ApiCard({ api, onBuy, buying, subscribed }: Props) {
       <dl className="space-y-2 text-xs text-[var(--muted)]">
         <div className="flex justify-between">
           <dt>Endpoint</dt>
-          <dd className="font-mono text-[11px] text-[var(--accent)]">/v1/{api.slug}</dd>
+          <dd className="font-mono text-[11px] text-[var(--accent)]">
+            /v1/{api.slug}
+          </dd>
         </div>
         <div className="flex justify-between">
           <dt>{MARKETPLACE_LABELS.quotaPack}</dt>
@@ -39,7 +43,7 @@ export function ApiCard({ api, onBuy, buying, subscribed }: Props) {
           <dt>{MARKETPLACE_LABELS.price}</dt>
           <dd className="font-mono font-semibold text-[var(--green)]">
             {"\u20b9"}
-            {api.pricePerCall.toFixed(4)}/call
+            {Number(api.pricePerCall || 0).toFixed(4)}/call
           </dd>
         </div>
       </dl>
@@ -52,7 +56,11 @@ export function ApiCard({ api, onBuy, buying, subscribed }: Props) {
           Subscribed
         </button>
       ) : (
-        <Button className="mt-4 w-full p-[10px]" onClick={() => onBuy(api.id)} disabled={buying}>
+        <Button
+          className="mt-4 w-full p-[10px]"
+          onClick={() => onBuy(api.id)}
+          disabled={buying}
+        >
           Subscribe
         </Button>
       )}

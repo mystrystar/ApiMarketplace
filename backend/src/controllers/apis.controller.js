@@ -185,7 +185,7 @@ async function purchase(req, res, next) {
       });
     }
 
-    const amount = api.pricePerCall * api.defaultQuota;
+    const amount = Number(api.pricePerCall || 0) * api.defaultQuota;
     const existing = await prisma.subscription.findUnique({
       where: { userId_apiId: { userId: req.user.id, apiId: api.id } },
     });

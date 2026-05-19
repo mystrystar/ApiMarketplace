@@ -39,14 +39,14 @@ export default function LogsPage() {
   }, [isAdmin, page, filters]);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [load]);
 
   useEffect(() => {
     async function loadApis() {
       const path = isAdmin ? API_PATHS.adminApis : API_PATHS.apis;
       const res = await apiRequest<{ apis: ApiItem[] }>(path);
-      setApis(res.apis);
+      setApis(res.apis || []);
     }
     loadApis();
   }, [isAdmin]);

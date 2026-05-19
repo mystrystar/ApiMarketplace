@@ -61,10 +61,25 @@ async function invoke(req, res, next) {
 
     // Hash the API key before database lookup
     const apiKeyHash = hashApiKey(apiKey);
-    const keySubscription = await prisma.subscription.findUnique({
+    let keySubscription = await prisma.subscription.findUnique({
       where: { apiKeyHash },
       include: { user: true },
     });
+
+    if (!keySubscription) {
+      keySubscription = await prisma.subscription.findUnique({
+        where: { apiKey },
+        include: { user: true },
+      });
+
+      if (keySubscription && keySubscription.apiKeyHash !== apiKeyHash) {
+        keySubscription = await prisma.subscription.update({
+          where: { id: keySubscription.id },
+          data: { apiKeyHash },
+          include: { user: true },
+        });
+      }
+    }
 
     if (!keySubscription) {
       await logCall({ req, startedAt, api, statusCode: 401 });
@@ -99,23 +114,19 @@ async function invoke(req, res, next) {
       });
     }
 
-    // Execute quota decrement with FOR UPDATE lock inside transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Acquire row-level lock with FOR UPDATE
-      const locked = await tx.$queryRaw`
-        SELECT id, "remainingQuota" FROM "Subscription" 
-        WHERE id = ${subscription.id}
-        FOR UPDATE
-      `;
+      const updatedCount = await tx.subscription.updateMany({
+        where: { id: subscription.id, remainingQuota: { gt: 0 } },
+        data: { remainingQuota: { decrement: 1 } },
+      });
 
-      if (!locked || locked.length === 0 || locked[0].remainingQuota <= 0) {
+      if (updatedCount.count === 0) {
         return null;
       }
 
-      // Safe to decrement now
-      const updated = await tx.subscription.update({
+      const updated = await tx.subscription.findUnique({
         where: { id: subscription.id },
-        data: { remainingQuota: { decrement: 1 } },
+        select: { remainingQuota: true },
       });
 
       // Log the successful call

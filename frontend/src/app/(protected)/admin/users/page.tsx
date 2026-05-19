@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (user?.role === "ADMIN") {
       apiRequest<{ users: User[] }>(API_PATHS.adminUsers).then((r) =>
-        setUsers(r.users),
+        setUsers(r.users || []),
       );
     }
   }, [user]);

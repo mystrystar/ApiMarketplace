@@ -3,11 +3,13 @@ const cors = require('cors');
 const routes = require('./routes');
 const v1Routes = require('./routes/v1.routes');
 const { errorHandler } = require('./middleware/errorHandler');
+const { normalizeJsonResponses } = require('./utils/serialize');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(normalizeJsonResponses);
 
 app.get('/', (req, res) => {
   res.json({

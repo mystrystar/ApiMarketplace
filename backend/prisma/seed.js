@@ -1,17 +1,43 @@
 require('../src/config');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
-const { generateApiKey } = require('../src/utils/apiKey');
+const { generateApiKey, hashApiKey } = require('../src/utils/apiKey');
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@marketplace.local';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const consumerEmail = process.env.CONSUMER_EMAIL || 'consumer@marketplace.local';
-  const consumerPassword = process.env.CONSUMER_PASSWORD || 'consumer123';
+  const subscriptions = await prisma.subscription.findMany({
+    select: { id: true, apiKey: true, apiKeyHash: true },
+  });
 
-  let admin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  for (const subscription of subscriptions) {
+    const expectedHash = hashApiKey(subscription.apiKey);
+    if (subscription.apiKeyHash !== expectedHash) {
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { apiKeyHash: expectedHash },
+      });
+    }
+  }
+
+  const adminEmail =
+    process.env.ADMIN_EMAIL || 'admin@marketplace.local';
+  const adminPassword =
+    process.env.ADMIN_PASSWORD || 'admin123';
+
+  const consumerEmail =
+    process.env.CONSUMER_EMAIL ||
+    'consumer@marketplace.local';
+
+  const consumerPassword =
+    process.env.CONSUMER_PASSWORD ||
+    'consumer123';
+
+  // Create Admin User
+  let admin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
+
   if (!admin) {
     admin = await prisma.user.create({
       data: {
@@ -21,27 +47,42 @@ async function main() {
         role: 'ADMIN',
       },
     });
+
+    console.log('✅ Admin created');
   }
 
-  let consumer = await prisma.user.findUnique({ where: { email: consumerEmail } });
+  // Create Consumer User
+  let consumer = await prisma.user.findUnique({
+    where: { email: consumerEmail },
+  });
+
   if (!consumer) {
     consumer = await prisma.user.create({
       data: {
         email: consumerEmail,
-        password: await bcrypt.hash(consumerPassword, 10),
+        password: await bcrypt.hash(
+          consumerPassword,
+          10
+        ),
         name: 'Consumer',
       },
     });
+
   }
 
-  let weatherApi = await prisma.api.findUnique({ where: { slug: 'weather' } });
+  // Create Sample API
+  let weatherApi = await prisma.api.findUnique({
+    where: { slug: 'weather' },
+  });
+
   if (!weatherApi) {
     weatherApi = await prisma.api.create({
       data: {
         slug: 'weather',
         title: 'Weather API',
         description: 'Sample weather data API',
-        baseUrl: 'https://api.example.com/weather',
+        baseUrl:
+          'https://api.example.com/weather',
         category: 'data',
         pricePerCall: 0.01,
         defaultQuota: 10,
@@ -51,26 +92,40 @@ async function main() {
     });
   }
 
-  const existingSub = await prisma.subscription.findUnique({
-    where: { userId_apiId: { userId: consumer.id, apiId: weatherApi.id } },
-  });
-
-  if (!existingSub) {
-    const purchase = await prisma.purchase.create({
-      data: {
-        userId: consumer.id,
-        apiId: weatherApi.id,
-        amount: 0,
-        quota: weatherApi.defaultQuota,
+  // Check Existing Subscription
+  const existingSub =
+    await prisma.subscription.findUnique({
+      where: {
+        userId_apiId: {
+          userId: consumer.id,
+          apiId: weatherApi.id,
+        },
       },
     });
 
+  if (!existingSub) {
+    // Create Purchase
+    const purchase =
+      await prisma.purchase.create({
+        data: {
+          userId: consumer.id,
+          apiId: weatherApi.id,
+          amount: 0,
+          quota: weatherApi.defaultQuota,
+        },
+      });
+
+    // Generate API Key
+    const apiKey = generateApiKey();
+
+    // Create Subscription
     await prisma.subscription.create({
       data: {
         userId: consumer.id,
         apiId: weatherApi.id,
         purchaseId: purchase.id,
-        apiKey: generateApiKey(),
+        apiKey,
+        apiKeyHash: hashApiKey(apiKey),
         totalQuota: purchase.quota,
         remainingQuota: purchase.quota,
       },
@@ -80,7 +135,9 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error(err);
+    console.error('❌ Seed failed:', err);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

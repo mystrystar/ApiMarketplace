@@ -26,7 +26,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => getStoredUser<User>());
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -47,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const stored = getStoredUser<User>();
-    if (stored) setUser(stored);
-    refreshUser().finally(() => setLoading(false));
+    void Promise.resolve()
+      .then(refreshUser)
+      .finally(() => setLoading(false));
   }, [refreshUser]);
 
   const login = useCallback(
