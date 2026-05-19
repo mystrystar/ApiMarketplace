@@ -16,6 +16,7 @@ export default function LogsPage() {
   const isAdmin = user?.role === "ADMIN";
   const [filters, setFilters] = useState({
     apiId: "",
+    method: "",
     status: "",
     from: "",
     to: "",
@@ -31,6 +32,7 @@ export default function LogsPage() {
         page,
         limit: DEFAULT_PAGE_SIZE,
         apiId: filters.apiId || undefined,
+        method: filters.method || undefined,
         status: filters.status || undefined,
         from: filters.from || undefined,
         to: filters.to ? `${filters.to}T23:59:59` : undefined,
@@ -86,12 +88,13 @@ export default function LogsPage() {
 
   function exportCsv() {
     const rows = data?.logs || [];
-    const header = ["Date", "API", "User", "Status", "Time ms", "IP"];
+    const header = ["Date", "API", "Method", "User", "Status", "Time ms", "IP"];
     const csv = [
       header,
       ...rows.map((log) => [
         new Date(log.createdAt).toISOString(),
         log.api?.title || log.apiName,
+        log.method || log.api?.method || "",
         log.user?.email || "",
         String(log.statusCode),
         String(log.responseTimeMs),
@@ -128,6 +131,7 @@ export default function LogsPage() {
       />
       <LogsFilters
         apiId={filters.apiId}
+        method={filters.method}
         status={filters.status}
         from={filters.from}
         to={filters.to}

@@ -1,6 +1,6 @@
 import { LOGS_LABELS, TABLE_COLS } from "@/constants";
 import type { ApiCallLog } from "@/types";
-import { StatusBadge } from "@/components/ui/Badges";
+import { MethodBadge, StatusBadge } from "@/components/ui/Badges";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export function LogsTable({
@@ -22,6 +22,7 @@ export function LogsTable({
           <tr>
             <th className="px-3 py-2">{TABLE_COLS.date}</th>
             <th className="px-3 py-2">{TABLE_COLS.api}</th>
+            <th className="px-3 py-2">{TABLE_COLS.method}</th>
             {showUser && <th className="px-3 py-2">{TABLE_COLS.user}</th>}
             <th className="px-3 py-2">{TABLE_COLS.status}</th>
             <th className="px-3 py-2">{TABLE_COLS.responseTime}</th>
@@ -38,6 +39,9 @@ export function LogsTable({
                 {new Date(log.createdAt).toLocaleString()}
               </td>
               <td className="px-3 py-2">{log.api?.title || log.apiName}</td>
+              <td className="px-3 py-2">
+                <MethodBadge method={log.method || log.api?.method || "POST"} />
+              </td>
               {showUser && (
                 <td className="px-3 py-2">{log.user?.email || "-"}</td>
               )}

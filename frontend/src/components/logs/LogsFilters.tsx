@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/Select";
 
 type Props = {
   apiId: string;
+  method: string;
   status: string;
   from: string;
   to: string;
@@ -15,6 +16,7 @@ type Props = {
 
 export function LogsFilters({
   apiId,
+  method,
   status,
   from,
   to,
@@ -22,12 +24,22 @@ export function LogsFilters({
   onChange,
 }: Props) {
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <Select
         label={LOGS_LABELS.api}
         value={apiId}
         onChange={(e) => onChange("apiId", e.target.value)}
         options={[{ value: "", label: LOGS_LABELS.allApis }, ...apiOptions]}
+      />
+      <Select
+        label={LOGS_LABELS.method}
+        value={method}
+        onChange={(e) => onChange("method", e.target.value)}
+        options={[
+          { value: "", label: LOGS_LABELS.allMethods },
+          { value: "GET", label: "GET" },
+          { value: "POST", label: "POST" },
+        ]}
       />
       <Select
         label={LOGS_LABELS.status}

@@ -50,11 +50,12 @@ export interface Subscription {
 export interface ApiCallLog {
   id: string;
   statusCode: number;
+  method: string;
   responseTimeMs: number;
   ipAddress?: string | null;
   apiName: string;
   createdAt: string;
-  api?: { id: string; title: string; slug: string } | null;
+  api?: { id: string; title: string; slug: string; method?: string } | null;
   user?: { id: string; email: string; name?: string | null };
 }
 

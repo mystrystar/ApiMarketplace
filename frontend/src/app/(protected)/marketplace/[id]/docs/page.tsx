@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { API_BASE, API_PATHS } from "@/constants";
+import Link from "next/link";
+import { API_BASE, API_PATHS, ROUTES } from "@/constants";
 import { apiRequest } from "@/lib/api-client";
 import type { ApiItem } from "@/types";
 import { Card } from "@/components/ui/Card";
@@ -38,7 +39,17 @@ export default function ApiDocsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`${api.title} Docs`} />
+      <PageHeader
+        title={`${api.title} Docs`}
+        action={
+          <Link
+            href={ROUTES.marketplace}
+            className="rounded-[var(--radius-sm)] border border-[rgba(79,142,255,0.3)] bg-[var(--accent-dim)] px-3 py-2 text-[13px] font-semibold text-[var(--accent)] transition hover:bg-[rgba(79,142,255,0.18)]"
+          >
+            Back to Marketplace
+          </Link>
+        }
+      />
       <Card>
         <div className="flex flex-wrap items-center gap-3">
           <MethodBadge method={api.method} />

@@ -4,6 +4,7 @@ function buildLogWhere(query, userId) {
   const where = {};
   if (userId) where.userId = userId;
   if (query.apiId) where.apiId = query.apiId;
+  if (query.method) where.method = String(query.method).toUpperCase();
   if (query.status) where.statusCode = parseInt(query.status, 10);
   if (query.from || query.to) {
     where.createdAt = {};
@@ -27,7 +28,7 @@ async function fetchPaginatedLogs(prisma, { query, userId, includeUser }) {
   const { page, limit, skip } = getPagination(query);
 
   const include = {
-    api: { select: { id: true, title: true, slug: true } },
+    api: { select: { id: true, title: true, slug: true, method: true } },
   };
   if (includeUser) {
     include.user = { select: { id: true, email: true, name: true } };

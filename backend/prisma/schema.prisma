@@ -107,6 +107,7 @@ model ApiCallLog {
   apiId          String?
   subscriptionId String?
   apiName        String
+  method         String       @default("POST")
   statusCode     Int
   responseTimeMs Int
   ipAddress      String?
