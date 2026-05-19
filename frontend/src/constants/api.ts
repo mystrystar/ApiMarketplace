@@ -16,7 +16,6 @@ export const API_PATHS = {
   adminApi: (id: string) => `/admin/apis/${id}`,
   adminUsers: "/admin/users",
   adminUser: (id: string) => `/admin/users/${id}`,
-  adminUserRole: (id: string) => `/admin/users/${id}/role`,
   adminPurchases: "/admin/purchases",
   adminAnalytics: "/admin/analytics",
   adminLogs: "/admin/logs",

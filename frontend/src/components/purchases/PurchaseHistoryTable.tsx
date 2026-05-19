@@ -1,5 +1,6 @@
 import { DASHBOARD_LABELS, TABLE_COLS } from "@/constants";
 import type { Purchase } from "@/types";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Props = {
   purchases: Purchase[];
@@ -9,13 +10,14 @@ type Props = {
 
 export function PurchaseHistoryTable({ purchases, showUser, onUserClick }: Props) {
   if (!purchases.length) {
-    return <p className="text-sm text-gray-500">{DASHBOARD_LABELS.noPurchases}</p>;
+    return <EmptyState title={DASHBOARD_LABELS.noPurchases} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+    <div className="console-panel overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
-        <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+        <thead className="border-b border-[var(--border)] bg-[var(--bg-elevated)] text-[10px] uppercase tracking-[1.5px] text-[var(--muted)]">
           <tr>
             <th className="px-3 py-2">{TABLE_COLS.date}</th>
             {showUser && <th className="px-3 py-2">{TABLE_COLS.user}</th>}
@@ -27,16 +29,16 @@ export function PurchaseHistoryTable({ purchases, showUser, onUserClick }: Props
         </thead>
         <tbody>
           {purchases.map((purchase) => (
-            <tr key={purchase.id} className="border-b last:border-0">
-              <td className="px-3 py-2">
+            <tr key={purchase.id} className="border-b border-[var(--border)] transition hover:bg-[rgba(79,142,255,0.04)] last:border-0">
+              <td className="px-4 py-[14px] font-mono text-xs text-[var(--muted)]">
                 {new Date(purchase.createdAt).toLocaleString()}
               </td>
               {showUser && (
-                <td className="px-3 py-2">
+                <td className="px-4 py-[14px]">
                   {onUserClick ? (
                     <button
                       type="button"
-                      className="text-left font-medium underline"
+                      className="text-left font-medium text-[var(--accent)]"
                       onClick={() => onUserClick(purchase.user.id)}
                     >
                       {purchase.user.email}
@@ -46,16 +48,26 @@ export function PurchaseHistoryTable({ purchases, showUser, onUserClick }: Props
                   )}
                 </td>
               )}
-              <td className="px-3 py-2">{purchase.api.title}</td>
-              <td className="px-3 py-2 font-mono text-xs">
+              <td className="px-4 py-[14px] font-medium">{purchase.api.title}</td>
+              <td className="px-4 py-[14px]">
+                <span className="rounded-md bg-[rgba(0,0,0,0.3)] px-2 py-[3px] font-mono text-[11px] text-[#7eb8ff]">
                 /v1/{purchase.api.slug}
+                </span>
               </td>
-              <td className="px-3 py-2">{purchase.quota}</td>
-              <td className="px-3 py-2">${purchase.amount.toFixed(2)}</td>
+              <td className="px-4 py-[14px] font-mono">{purchase.quota}</td>
+              <td
+                className={`px-4 py-[14px] font-mono font-semibold ${
+                  purchase.amount === 0 ? "text-[var(--muted)]" : "text-[var(--green)]"
+                }`}
+              >
+                {"\u20b9"}
+                {purchase.amount.toFixed(2)}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

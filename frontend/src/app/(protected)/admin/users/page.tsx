@@ -13,8 +13,8 @@ import { apiRequest } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import type { AdminUserDetails, User } from "@/types";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { SubscriptionList } from "@/components/dashboard/SubscriptionList";
 import { PurchaseHistoryTable } from "@/components/purchases/PurchaseHistoryTable";
 import { LogsTable } from "@/components/logs/LogsTable";
@@ -39,18 +39,6 @@ export default function AdminUsersPage() {
     }
   }, [user]);
 
-  async function changeRole(id: string, role: string) {
-    await apiRequest(API_PATHS.adminUserRole(id), {
-      method: "PATCH",
-      body: { role },
-    });
-    const res = await apiRequest<{ users: User[] }>(API_PATHS.adminUsers);
-    setUsers(res.users);
-    if (selected?.user.id === id) {
-      await loadUserDetails(id);
-    }
-  }
-
   async function loadUserDetails(id: string) {
     const res = await apiRequest<AdminUserDetails>(API_PATHS.adminUser(id));
     setSelected(res);
@@ -58,40 +46,56 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={ADMIN_LABELS.users} />
-      <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+      <PageHeader
+        title={ADMIN_LABELS.users}
+        action={
+          <span className="rounded-full bg-[var(--accent-dim)] px-3 py-1 text-xs text-[var(--accent)]">
+            {users.length} users
+          </span>
+        }
+      />
+      <div className="console-panel overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+          <thead className="border-b border-[var(--border)] bg-[var(--bg-elevated)] text-[10px] uppercase tracking-[1.5px] text-[var(--muted)]">
             <tr>
               <th className="px-3 py-2">{TABLE_COLS.email}</th>
               <th className="px-3 py-2">{TABLE_COLS.role}</th>
+              <th className="px-3 py-2">Subscriptions</th>
+              <th className="px-3 py-2">Total Calls</th>
               <th className="px-3 py-2">{ADMIN_LABELS.purchases}</th>
               <th className="px-3 py-2">{TABLE_COLS.actions}</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b">
-                <td className="px-3 py-2">
+              <tr key={u.id} className="border-b border-[var(--border)] transition hover:bg-[rgba(79,142,255,0.04)]">
+                <td className="px-4 py-[14px]">
                   <button
                     type="button"
-                    className="text-left font-medium underline"
+                    className="text-left font-medium text-[var(--accent)]"
                     onClick={() => loadUserDetails(u.id)}
                   >
                     {u.email}
                   </button>
                 </td>
-                <td className="px-3 py-2">{u.role}</td>
-                <td className="px-3 py-2">{u._count?.purchases || 0}</td>
-                <td className="px-3 py-2 w-40">
-                  <Select
-                    value={u.role}
-                    onChange={(e) => changeRole(u.id, e.target.value)}
-                    options={[
-                      { value: "USER", label: "USER" },
-                      { value: "ADMIN", label: "ADMIN" },
-                    ]}
-                  />
+                <td className="px-4 py-[14px]">
+                  <span
+                    className={`rounded-full px-[10px] py-[3px] text-[10px] font-semibold ${
+                      u.role === "ADMIN"
+                        ? "bg-[rgba(124,58,237,0.12)] text-[#a78bfa]"
+                        : "bg-[var(--accent-dim)] text-[var(--accent)]"
+                    }`}
+                  >
+                    {u.role}
+                  </span>
+                </td>
+                <td className="px-4 py-[14px] font-mono">{u._count?.subscriptions || 0}</td>
+                <td className="px-4 py-[14px] font-mono">{u._count?.apiCallLogs || 0}</td>
+                <td className="px-4 py-[14px] font-mono">{u._count?.purchases || 0}</td>
+                <td className="w-40 px-4 py-[14px]">
+                  <Button variant="secondary" onClick={() => loadUserDetails(u.id)} className="px-3 py-1 text-[11px]">
+                    View
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -100,10 +104,14 @@ export default function AdminUsersPage() {
       </div>
       {selected && (
         <div className="space-y-4">
-          <Card title={ADMIN_LABELS.userDetails}>
+          <Card title={`${ADMIN_LABELS.userDetails}: ${selected.user.email}`}>
             <div className="space-y-2 text-sm">
-              <p className="font-medium">{selected.user.email}</p>
-              <p>{selected.user.role}</p>
+              <p className="text-[var(--text-muted)]">
+                Click another email in the table to inspect that user.
+              </p>
+              <p className="inline-flex rounded-full bg-[rgba(79,142,255,0.12)] px-2 py-1 text-xs text-[#7eb8ff]">
+                {selected.user.role}
+              </p>
             </div>
           </Card>
           <Card title={DASHBOARD_LABELS.subscriptions}>

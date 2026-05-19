@@ -6,7 +6,12 @@ export interface User {
   name?: string | null;
   role: Role;
   createdAt?: string;
-  _count?: { apis?: number; purchases?: number; subscriptions?: number };
+  _count?: {
+    apis?: number;
+    purchases?: number;
+    subscriptions?: number;
+    apiCallLogs?: number;
+  };
 }
 
 export interface ApiItem {
@@ -64,6 +69,8 @@ export interface DashboardData {
   subscriptions: Subscription[];
   purchases: Purchase[];
   totalCalls: number;
+  callsToday: number;
+  quotaHealth: number;
   recentLogs: ApiCallLog[];
 }
 
@@ -75,10 +82,13 @@ export interface AdminUserDetails {
 }
 
 export interface Analytics {
+  totalUsers: number;
+  totalApis: number;
   totalCallsToday: number;
   revenue: number;
   topApis: { apiId: string; title: string; count: number }[];
   topUsers: { id?: string; email?: string; name?: string | null; count: number }[];
+  recentUsers: { id: string; email: string; name?: string | null; createdAt: string }[];
 }
 
 export interface PaginatedLogs {

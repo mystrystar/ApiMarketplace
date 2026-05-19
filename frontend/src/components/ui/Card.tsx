@@ -10,8 +10,12 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={`rounded border border-gray-200 bg-white p-4 ${className}`}>
-      {title && <h3 className="mb-3 text-sm font-semibold text-gray-800">{title}</h3>}
+    <div className={`console-panel p-5 ${className}`}>
+      {title && (
+        <h3 className="mb-4 border-b border-[var(--border)] pb-2 text-[11px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
+          {title}
+        </h3>
+      )}
       {children}
     </div>
   );

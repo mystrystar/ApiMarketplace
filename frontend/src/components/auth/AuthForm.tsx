@@ -35,8 +35,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md rounded border border-gray-200 bg-white p-6">
-      <h1 className="mb-4 text-xl font-semibold">
+    <div className="console-panel relative mx-auto w-full max-w-[420px] rounded-[var(--radius-lg)] p-9">
+      <div className="mb-7 text-center">
+        <p className="text-xl font-bold">
+          <span className="text-[var(--accent)]">API</span>{" "}
+          <span className="text-white">Marketplace</span>
+        </p>
+        <p className="mt-1 text-xs text-[var(--muted)]">Developer Gateway</p>
+      </div>
+      <h1 className="mb-5 text-[22px] font-semibold text-[var(--text)]">
         {isLogin ? AUTH_LABELS.loginTitle : AUTH_LABELS.signupTitle}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -62,16 +69,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" disabled={loading} className="w-full">
+        {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+        <Button type="submit" disabled={loading} className="mt-1 w-full py-[11px] text-sm">
           {isLogin ? AUTH_LABELS.loginBtn : AUTH_LABELS.signupBtn}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-600">
+      <p className="mt-4 text-center text-xs text-[var(--muted)]">
         {isLogin ? AUTH_LABELS.noAccount : AUTH_LABELS.hasAccount}{" "}
         <Link
           href={isLogin ? ROUTES.signup : ROUTES.login}
-          className="text-gray-900 underline"
+          className="text-[var(--accent)] underline"
         >
           {isLogin ? AUTH_LABELS.signupBtn : AUTH_LABELS.loginBtn}
         </Link>

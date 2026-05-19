@@ -67,6 +67,13 @@ async function getDashboard(req, res, next) {
       where: { userId: req.user.id },
     });
 
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const callsToday = await prisma.apiCallLog.count({
+      where: { userId: req.user.id, createdAt: { gte: startOfDay } },
+    });
+
     const recentLogs = await prisma.apiCallLog.findMany({
       where: { userId: req.user.id },
       take: 10,
@@ -76,7 +83,22 @@ async function getDashboard(req, res, next) {
       },
     });
 
-    res.json({ user, subscriptions, purchases, totalCalls, recentLogs });
+    const totalQuota = subscriptions.reduce((sum, sub) => sum + sub.totalQuota, 0);
+    const remainingQuota = subscriptions.reduce(
+      (sum, sub) => sum + sub.remainingQuota,
+      0,
+    );
+    const quotaHealth = totalQuota ? Math.round((remainingQuota / totalQuota) * 100) : 0;
+
+    res.json({
+      user,
+      subscriptions,
+      purchases,
+      totalCalls,
+      callsToday,
+      quotaHealth,
+      recentLogs,
+    });
   } catch (err) {
     next(err);
   }

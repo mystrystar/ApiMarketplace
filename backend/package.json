@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "prima": "^0.0.1",
     "prisma": "^6.8.2"
   },
   "prisma": {

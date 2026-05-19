@@ -7,7 +7,6 @@ import { apiRequest, ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import type { ApiItem } from "@/types";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
 import {
   ApiForm,
   ApiFormData,
@@ -114,15 +113,21 @@ export default function AdminApisPage() {
           ) : null
         }
       />
-      <Card title={editingId ? ADMIN_LABELS.editApi : ADMIN_LABELS.createApi}>
+      <p className="-mt-4 text-[13px] text-[var(--muted)]">
+        Add a new API to the marketplace catalog
+      </p>
+      <div className="console-panel max-w-[900px] rounded-[var(--radius-lg)] px-8 py-7">
+        <div className="mb-4 border-b border-[var(--border)] pb-2 text-[11px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
+          API Details
+        </div>
         <ApiForm
           form={form}
           onChange={setForm}
           onSubmit={handleSubmit}
           loading={saving}
         />
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      </Card>
+        {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
+      </div>
       <ApiTable apis={apis} onEdit={handleEdit} onDelete={handleDelete} />
     </div>
   );

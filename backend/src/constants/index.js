@@ -1,5 +1,4 @@
 module.exports = {
-  ROLES: ['USER', 'ADMIN'],
   API_STATUS: {
     PENDING: 'PENDING',
     APPROVED: 'APPROVED',

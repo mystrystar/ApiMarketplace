@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { API_STATUS, ERRORS, ROLES } = require('../constants');
+const { API_STATUS, ERRORS } = require('../constants');
 const { toSlug } = require('../utils/slug');
 const { fetchPaginatedLogs } = require('../utils/logsQuery');
 
@@ -12,7 +12,14 @@ async function listUsers(req, res, next) {
         name: true,
         role: true,
         createdAt: true,
-        _count: { select: { apis: true, purchases: true, subscriptions: true } },
+        _count: {
+          select: {
+            apis: true,
+            purchases: true,
+            subscriptions: true,
+            apiCallLogs: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -68,33 +75,6 @@ async function getUserDetails(req, res, next) {
 
     res.json({ user, purchases, subscriptions, recentLogs });
   } catch (err) {
-    next(err);
-  }
-}
-
-async function updateUserRole(req, res, next) {
-  try {
-    const { role } = req.body;
-
-    if (!ROLES.includes(role)) {
-      return res.status(400).json({ error: `Role must be ${ROLES.join(' or ')}` });
-    }
-
-    if (req.params.id === req.user.id) {
-      return res.status(400).json({ error: 'Cannot change your own role' });
-    }
-
-    const user = await prisma.user.update({
-      where: { id: req.params.id },
-      data: { role },
-      select: { id: true, email: true, name: true, role: true },
-    });
-
-    res.json({ user });
-  } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: ERRORS.USER_NOT_FOUND });
-    }
     next(err);
   }
 }
@@ -280,6 +260,16 @@ async function getAnalytics(req, res, next) {
       where: { createdAt: { gte: startOfDay } },
     });
 
+    const [totalUsers, totalApis, recentUsers] = await Promise.all([
+      prisma.user.count(),
+      prisma.api.count(),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, email: true, name: true, createdAt: true },
+      }),
+    ]);
+
     const revenueResult = await prisma.purchase.aggregate({
       _sum: { amount: true },
     });
@@ -325,10 +315,13 @@ async function getAnalytics(req, res, next) {
     }));
 
     res.json({
+      totalUsers,
+      totalApis,
       totalCallsToday,
       revenue: revenueResult._sum.amount || 0,
       topApis,
       topUsers,
+      recentUsers,
     });
   } catch (err) {
     next(err);
@@ -350,7 +343,6 @@ async function listLogs(req, res, next) {
 module.exports = {
   listUsers,
   getUserDetails,
-  updateUserRole,
   listApis,
   createApi,
   updateApi,

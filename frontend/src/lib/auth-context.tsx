@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       setAuth(data.token, data.user);
       setUser(data.user);
-      router.push(ROUTES.marketplace);
+      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
     },
     [router],
   );
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       setAuth(data.token, data.user);
       setUser(data.user);
-      router.push(ROUTES.marketplace);
+      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
     },
     [router],
   );

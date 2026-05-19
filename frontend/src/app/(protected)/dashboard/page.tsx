@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { SubscriptionList } from "@/components/dashboard/SubscriptionList";
 import { PurchaseHistoryTable } from "@/components/purchases/PurchaseHistoryTable";
+import { LogsTable } from "@/components/logs/LogsTable";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -40,7 +41,7 @@ export default function DashboardPage() {
   }
 
   if (!data) {
-    return <p className="text-sm text-gray-500">Loading...</p>;
+    return <p className="text-sm text-[var(--text-muted)]">Loading...</p>;
   }
 
   return (
@@ -49,13 +50,20 @@ export default function DashboardPage() {
       <StatsCards
         subscriptionCount={data.subscriptions.length}
         totalCalls={data.totalCalls}
+        callsToday={data.callsToday}
+        quotaHealth={data.quotaHealth}
       />
-      <Card title={DASHBOARD_LABELS.subscriptions}>
-        <SubscriptionList
-          items={data.subscriptions}
-          onRegenerateKey={regenerateSubscriptionKey}
-        />
-      </Card>
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <Card title={DASHBOARD_LABELS.subscriptions}>
+          <SubscriptionList
+            items={data.subscriptions}
+            onRegenerateKey={regenerateSubscriptionKey}
+          />
+        </Card>
+        <Card title={DASHBOARD_LABELS.recentActivity}>
+          <LogsTable logs={data.recentLogs} />
+        </Card>
+      </div>
       <Card title={DASHBOARD_LABELS.purchaseHistory}>
         <PurchaseHistoryTable purchases={data.purchases} />
       </Card>

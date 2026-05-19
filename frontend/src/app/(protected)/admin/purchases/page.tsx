@@ -36,10 +36,19 @@ export default function AdminPurchasesPage() {
     const res = await apiRequest<AdminUserDetails>(API_PATHS.adminUser(id));
     setSelected(res);
   }
+  const revenue = purchases.reduce((sum, purchase) => sum + purchase.amount, 0);
 
   return (
     <div className="space-y-6">
-      <PageHeader title={ADMIN_LABELS.purchases} />
+      <PageHeader
+        title={ADMIN_LABELS.purchases}
+        action={
+          <span className="rounded-full bg-[var(--green-dim)] px-[14px] py-1 font-mono text-xs text-[var(--green)]">
+            {"\u20b9"}
+            {revenue.toFixed(2)}
+          </span>
+        }
+      />
       <PurchaseHistoryTable
         purchases={purchases}
         showUser
@@ -47,10 +56,14 @@ export default function AdminPurchasesPage() {
       />
       {selected && (
         <div className="space-y-4">
-          <Card title={ADMIN_LABELS.userDetails}>
+          <Card title={`${ADMIN_LABELS.userDetails}: ${selected.user.email}`}>
             <div className="space-y-2 text-sm">
-              <p className="font-medium">{selected.user.email}</p>
-              <p>{selected.user.role}</p>
+              <p className="text-[var(--text-muted)]">
+                Selected from purchase history. Their subscriptions and recent calls are shown below.
+              </p>
+              <p className="inline-flex rounded-full bg-[rgba(79,142,255,0.12)] px-2 py-1 text-xs text-[#7eb8ff]">
+                {selected.user.role}
+              </p>
             </div>
           </Card>
           <Card title={DASHBOARD_LABELS.subscriptions}>

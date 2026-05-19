@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] text-sm text-[var(--text-muted)]">
         Loading...
       </div>
     );
@@ -25,9 +25,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[var(--bg-primary)]">
       <Sidebar />
-      <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+      <main className="flex-1 overflow-auto p-4 pb-24 md:p-8">{children}</main>
     </div>
   );
 }

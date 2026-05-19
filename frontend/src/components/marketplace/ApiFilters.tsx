@@ -20,13 +20,15 @@ export function ApiFilters({
   onCategoryChange,
 }: Props) {
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-2">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row">
       <Input
         label={MARKETPLACE_LABELS.search}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Search by name..."
+        className="sm:flex-1"
       />
+      <div className="sm:w-[200px]">
       <Select
         label={MARKETPLACE_LABELS.category}
         value={category}
@@ -36,6 +38,7 @@ export function ApiFilters({
           ...categories.map((c) => ({ value: c, label: c })),
         ]}
       />
+      </div>
     </div>
   );
 }

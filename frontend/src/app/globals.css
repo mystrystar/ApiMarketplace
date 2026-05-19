@@ -1,5 +1,97 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+:root {
+  --bg-page: #0b0f1c;
+  --bg-surface: #111827;
+  --bg-card: #16202e;
+  --bg-elevated: #1c2a3a;
+  --border: rgba(79, 142, 255, 0.12);
+  --border-h: rgba(79, 142, 255, 0.28);
+  --accent: #4f8eff;
+  --accent-dim: rgba(79, 142, 255, 0.12);
+  --purple: #7c3aed;
+  --green: #10d9a0;
+  --green-dim: rgba(16, 217, 160, 0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245, 158, 11, 0.12);
+  --red: #f43f5e;
+  --red-dim: rgba(244, 63, 94, 0.12);
+  --text: #dde5f4;
+  --muted: #64748b;
+  --font-ui: "Sora", sans-serif;
+  --font-code: "JetBrains Mono", monospace;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --bg-primary: var(--bg-page);
+  --bg-elevated-2: var(--bg-card);
+  --accent-blue: var(--accent);
+  --accent-purple: var(--purple);
+  --success: var(--green);
+  --warning: var(--amber);
+  --danger: var(--red);
+  --text-primary: var(--text);
+  --text-muted: var(--muted);
+  --border-default: var(--border);
+  --border-hover: var(--border-h);
+  --font-mono: var(--font-code);
+}
+
+* {
+  box-sizing: border-box;
+  color: var(--text);
+  font-family: var(--font-ui);
+  scrollbar-color: var(--bg-elevated) var(--bg-page);
+}
+
 body {
-  @apply bg-gray-100 text-gray-900 antialiased;
+  background: var(--bg-page);
+  color: var(--text);
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+  margin: 0;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: rgba(79, 142, 255, 0.5);
+}
+
+.console-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.console-panel:hover {
+  border-color: var(--border-h);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-family: var(--font-code);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.status-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
 }

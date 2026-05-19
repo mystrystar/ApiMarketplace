@@ -58,7 +58,7 @@ export function ApiForm({ form, onChange, onSubmit, onCancel, loading }: Props) 
 
   return (
     <form
-      className="grid gap-3 sm:grid-cols-2"
+      className="grid gap-5 sm:grid-cols-2"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();
@@ -72,9 +72,11 @@ export function ApiForm({ form, onChange, onSubmit, onCancel, loading }: Props) 
       <Input label={ADMIN_LABELS.pricePerCall} type="number" step="0.0001" value={form.pricePerCall} onChange={(e) => set("pricePerCall", e.target.value)} />
       <Input label={ADMIN_LABELS.defaultQuota} type="number" value={form.defaultQuota} onChange={(e) => set("defaultQuota", e.target.value)} />
       <label className="block text-sm sm:col-span-2">
-        <span className="mb-1 block text-gray-600">{ADMIN_LABELS.dummyResponse}</span>
+        <span className="mb-1 block text-[11px] font-semibold uppercase text-[var(--text-muted)]">
+          {ADMIN_LABELS.dummyResponse}
+        </span>
         <textarea
-          className="min-h-32 w-full rounded border border-gray-300 px-3 py-2 font-mono text-sm"
+          className="min-h-40 w-full resize-y rounded-[var(--radius-sm)] border border-[rgba(79,142,255,0.2)] bg-[#0d1520] px-[14px] py-[10px] font-mono text-xs text-[var(--text)] transition focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_rgba(79,142,255,0.1)] focus:outline-none"
           value={form.dummyResponse}
           onChange={(e) => set("dummyResponse", e.target.value)}
         />
@@ -89,8 +91,10 @@ export function ApiForm({ form, onChange, onSubmit, onCancel, loading }: Props) 
           { value: "REJECTED", label: "REJECTED" },
         ]}
       />
-      <div className="flex gap-2 sm:col-span-2">
-        <Button type="submit" disabled={loading}>{ADMIN_LABELS.save}</Button>
+      <div className="flex justify-end gap-2 sm:col-span-2">
+        <Button type="submit" disabled={loading} className="px-7">
+          {ADMIN_LABELS.save}
+        </Button>
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel}>
             {ADMIN_LABELS.cancel}

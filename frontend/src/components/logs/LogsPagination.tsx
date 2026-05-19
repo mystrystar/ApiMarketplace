@@ -11,7 +11,7 @@ type Props = {
 
 export function LogsPagination({ page, totalPages, onPageChange }: Props) {
   return (
-    <div className="mt-4 flex items-center justify-between text-sm">
+    <div className="mt-4 flex items-center justify-between text-sm text-[var(--text-muted)]">
       <span>
         Page {page} of {totalPages || 1}
       </span>
