@@ -7,6 +7,7 @@ const API_PUBLIC_SELECT = {
   category: true,
   pricePerCall: true,
   defaultQuota: true,
+  dummyResponse: true,
   status: true,
   createdAt: true,
   updatedAt: true,

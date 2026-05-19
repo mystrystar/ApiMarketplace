@@ -12,12 +12,61 @@ async function listUsers(req, res, next) {
         name: true,
         role: true,
         createdAt: true,
-        _count: { select: { apis: true, purchases: true } },
+        _count: { select: { apis: true, purchases: true, subscriptions: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getUserDetails(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: ERRORS.USER_NOT_FOUND });
+    }
+
+    const [purchases, subscriptions, recentLogs] = await Promise.all([
+      prisma.purchase.findMany({
+        where: { userId: user.id },
+        include: {
+          api: { select: { id: true, title: true, slug: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.subscription.findMany({
+        where: { userId: user.id },
+        include: {
+          api: { select: { id: true, title: true, slug: true, status: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.apiCallLog.findMany({
+        where: { userId: user.id },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          api: { select: { id: true, title: true, slug: true } },
+          user: { select: { id: true, email: true, name: true } },
+        },
+      }),
+    ]);
+
+    res.json({ user, purchases, subscriptions, recentLogs });
   } catch (err) {
     next(err);
   }
@@ -68,8 +117,17 @@ async function listApis(req, res, next) {
 
 async function createApi(req, res, next) {
   try {
-    const { title, description, baseUrl, category, pricePerCall, slug, defaultQuota, status } =
-      req.body;
+    const {
+      title,
+      description,
+      baseUrl,
+      category,
+      pricePerCall,
+      slug,
+      defaultQuota,
+      dummyResponse,
+      status,
+    } = req.body;
 
     if (!title || !baseUrl) {
       return res.status(400).json({ error: 'Title and baseUrl are required' });
@@ -89,6 +147,7 @@ async function createApi(req, res, next) {
         category,
         pricePerCall: pricePerCall ?? 0,
         defaultQuota: defaultQuota ?? 100,
+        dummyResponse,
         status: status || API_STATUS.APPROVED,
         providerId: req.user.id,
       },
@@ -102,8 +161,16 @@ async function createApi(req, res, next) {
 
 async function updateApi(req, res, next) {
   try {
-    const { title, description, baseUrl, category, pricePerCall, defaultQuota, status } =
-      req.body;
+    const {
+      title,
+      description,
+      baseUrl,
+      category,
+      pricePerCall,
+      defaultQuota,
+      dummyResponse,
+      status,
+    } = req.body;
 
     const api = await prisma.api.update({
       where: { id: req.params.id },
@@ -114,6 +181,7 @@ async function updateApi(req, res, next) {
         category,
         pricePerCall,
         defaultQuota,
+        dummyResponse,
         status,
       },
     });
@@ -184,7 +252,12 @@ async function deleteApi(req, res, next) {
 
 async function listPurchases(req, res, next) {
   try {
+    const where = {};
+    if (req.query.userId) where.userId = req.query.userId;
+    if (req.query.apiId) where.apiId = req.query.apiId;
+
     const purchases = await prisma.purchase.findMany({
+      where,
       include: {
         user: { select: { id: true, email: true, name: true } },
         api: { select: { id: true, title: true, slug: true } },
@@ -212,20 +285,23 @@ async function getAnalytics(req, res, next) {
     });
 
     const logs = await prisma.apiCallLog.findMany({
-      select: { apiId: true, userId: true, api: { select: { title: true } } },
+      select: { apiId: true, userId: true, apiName: true, api: { select: { title: true } } },
     });
 
     const apiCounts = {};
     const userCounts = {};
 
     for (const log of logs) {
-      apiCounts[log.apiId] = apiCounts[log.apiId] || {
+      const apiKey = log.apiId || log.apiName;
+      apiCounts[apiKey] = apiCounts[apiKey] || {
         apiId: log.apiId,
-        title: log.api.title,
+        title: log.api?.title || log.apiName,
         count: 0,
       };
-      apiCounts[log.apiId].count += 1;
-      userCounts[log.userId] = (userCounts[log.userId] || 0) + 1;
+      apiCounts[apiKey].count += 1;
+      if (log.userId) {
+        userCounts[log.userId] = (userCounts[log.userId] || 0) + 1;
+      }
     }
 
     const topApis = Object.values(apiCounts)
@@ -273,6 +349,7 @@ async function listLogs(req, res, next) {
 
 module.exports = {
   listUsers,
+  getUserDetails,
   updateUserRole,
   listApis,
   createApi,

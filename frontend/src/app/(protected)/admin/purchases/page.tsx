@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ADMIN_LABELS, API_PATHS, ROUTES, TABLE_COLS } from "@/constants";
+import { ADMIN_LABELS, API_PATHS, DASHBOARD_LABELS, ROUTES } from "@/constants";
 import { apiRequest } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
-import type { Purchase } from "@/types";
+import type { AdminUserDetails, Purchase } from "@/types";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { SubscriptionList } from "@/components/dashboard/SubscriptionList";
+import { LogsTable } from "@/components/logs/LogsTable";
+import { PurchaseHistoryTable } from "@/components/purchases/PurchaseHistoryTable";
 
 export default function AdminPurchasesPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [selected, setSelected] = useState<AdminUserDetails | null>(null);
 
   useEffect(() => {
     if (!loading && user?.role !== "ADMIN") {
@@ -27,35 +32,35 @@ export default function AdminPurchasesPage() {
     }
   }, [user]);
 
+  async function loadUserDetails(id: string) {
+    const res = await apiRequest<AdminUserDetails>(API_PATHS.adminUser(id));
+    setSelected(res);
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader title={ADMIN_LABELS.purchases} />
-      <div className="overflow-x-auto rounded border border-gray-200 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-3 py-2">{TABLE_COLS.date}</th>
-              <th className="px-3 py-2">{TABLE_COLS.user}</th>
-              <th className="px-3 py-2">{TABLE_COLS.api}</th>
-              <th className="px-3 py-2">{TABLE_COLS.quota}</th>
-              <th className="px-3 py-2">{TABLE_COLS.amount}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchases.map((p) => (
-              <tr key={p.id} className="border-b">
-                <td className="px-3 py-2">
-                  {new Date(p.createdAt).toLocaleString()}
-                </td>
-                <td className="px-3 py-2">{p.user.email}</td>
-                <td className="px-3 py-2">{p.api.title}</td>
-                <td className="px-3 py-2">{p.quota}</td>
-                <td className="px-3 py-2">${p.amount.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <PurchaseHistoryTable
+        purchases={purchases}
+        showUser
+        onUserClick={loadUserDetails}
+      />
+      {selected && (
+        <div className="space-y-4">
+          <Card title={ADMIN_LABELS.userDetails}>
+            <div className="space-y-2 text-sm">
+              <p className="font-medium">{selected.user.email}</p>
+              <p>{selected.user.role}</p>
+            </div>
+          </Card>
+          <Card title={DASHBOARD_LABELS.subscriptions}>
+            <SubscriptionList items={selected.subscriptions} />
+          </Card>
+          <Card title={DASHBOARD_LABELS.recentActivity}>
+            <LogsTable logs={selected.recentLogs} />
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

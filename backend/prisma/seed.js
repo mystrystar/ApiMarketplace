@@ -19,13 +19,7 @@ async function main() {
         password: await bcrypt.hash(adminPassword, 10),
         name: 'Admin',
         role: 'ADMIN',
-        apiKey: generateApiKey(),
       },
-    });
-  } else if (!admin.apiKey) {
-    admin = await prisma.user.update({
-      where: { id: admin.id },
-      data: { apiKey: generateApiKey() },
     });
   }
 
@@ -36,13 +30,7 @@ async function main() {
         email: consumerEmail,
         password: await bcrypt.hash(consumerPassword, 10),
         name: 'Consumer',
-        apiKey: generateApiKey(),
       },
-    });
-  } else if (!consumer.apiKey) {
-    consumer = await prisma.user.update({
-      where: { id: consumer.id },
-      data: { apiKey: generateApiKey() },
     });
   }
 
@@ -82,6 +70,7 @@ async function main() {
         userId: consumer.id,
         apiId: weatherApi.id,
         purchaseId: purchase.id,
+        apiKey: generateApiKey(),
         totalQuota: purchase.quota,
         remainingQuota: purchase.quota,
       },

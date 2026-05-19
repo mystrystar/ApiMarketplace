@@ -28,7 +28,6 @@ model User {
   id            String         @id @default(cuid())
   email         String         @unique
   password      String
-  apiKey        String         @unique
   name          String?
   role          Role           @default(USER)
   createdAt     DateTime       @default(now())
@@ -48,6 +47,7 @@ model Api {
   category     String?
   pricePerCall Float          @default(0)
   defaultQuota Int            @default(100)
+  dummyResponse Json?
   status       ApiStatus      @default(PENDING)
   providerId   String
   provider     User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -78,6 +78,7 @@ model Subscription {
   userId         String
   apiId          String
   purchaseId     String             @unique
+  apiKey         String             @unique
   totalQuota     Int
   remainingQuota Int
   status         SubscriptionStatus @default(ACTIVE)
@@ -95,13 +96,16 @@ model Subscription {
 
 model ApiCallLog {
   id             String       @id @default(cuid())
-  userId         String
-  apiId          String
-  subscriptionId String
+  userId         String?
+  apiId          String?
+  subscriptionId String?
+  apiName        String
   statusCode     Int
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  api            Api          @relation(fields: [apiId], references: [id], onDelete: Cascade)
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  responseTimeMs Int
+  ipAddress      String?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  api            Api?         @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())
 
   @@index([userId, apiId])

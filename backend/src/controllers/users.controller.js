@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { SUBSCRIPTION_STATUS } = require('../constants');
+const { ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
 const { generateApiKey } = require('../utils/apiKey');
 const { fetchPaginatedLogs } = require('../utils/logsQuery');
 
@@ -43,15 +43,24 @@ async function getDashboard(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, email: true, name: true, role: true, apiKey: true },
+      select: { id: true, email: true, name: true, role: true },
     });
 
     const subscriptions = await prisma.subscription.findMany({
       where: { userId: req.user.id, status: SUBSCRIPTION_STATUS.ACTIVE },
       include: {
-        api: { select: { id: true, title: true, slug: true, category: true } },
+        api: { select: { id: true, title: true, slug: true, category: true, status: true } },
       },
       orderBy: { updatedAt: 'desc' },
+    });
+
+    const purchases = await prisma.purchase.findMany({
+      where: { userId: req.user.id },
+      include: {
+        user: { select: { id: true, email: true, name: true } },
+        api: { select: { id: true, title: true, slug: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
 
     const totalCalls = await prisma.apiCallLog.count({
@@ -67,7 +76,7 @@ async function getDashboard(req, res, next) {
       },
     });
 
-    res.json({ user, subscriptions, totalCalls, recentLogs });
+    res.json({ user, subscriptions, purchases, totalCalls, recentLogs });
   } catch (err) {
     next(err);
   }
@@ -76,13 +85,25 @@ async function getDashboard(req, res, next) {
 async function regenerateApiKey(req, res, next) {
   try {
     const apiKey = generateApiKey();
-    await prisma.user.update({
-      where: { id: req.user.id },
+    const subscription = await prisma.subscription.findFirst({
+      where: { id: req.params.subscriptionId, userId: req.user.id },
+      select: { id: true },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: ERRORS.NOT_FOUND });
+    }
+
+    await prisma.subscription.update({
+      where: { id: subscription.id },
       data: { apiKey },
     });
 
     res.json({ apiKey });
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: ERRORS.NOT_FOUND });
+    }
     next(err);
   }
 }

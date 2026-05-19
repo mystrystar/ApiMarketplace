@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { API_PUBLIC_SELECT } = require('../constants/apiSelect');
 const { API_STATUS, ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
 const { toSlug } = require('../utils/slug');
+const { generateApiKey } = require('../utils/apiKey');
 
 async function listApproved(req, res, next) {
   try {
@@ -156,6 +157,10 @@ async function purchase(req, res, next) {
       where: { userId_apiId: { userId: req.user.id, apiId: api.id } },
     });
 
+    if (existing?.status === SUBSCRIPTION_STATUS.ACTIVE && existing.remainingQuota > 0) {
+      return res.status(409).json({ error: ERRORS.ACTIVE_QUOTA_EXISTS });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const purchaseRecord = await tx.purchase.create({
         data: {
@@ -182,6 +187,7 @@ async function purchase(req, res, next) {
             userId: req.user.id,
             apiId: api.id,
             purchaseId: purchaseRecord.id,
+            apiKey: generateApiKey(),
             totalQuota: api.defaultQuota,
             remainingQuota: api.defaultQuota,
           },

@@ -43,6 +43,17 @@ export default function AdminApisPage() {
   async function handleSubmit() {
     setSaving(true);
     setError("");
+    let dummyResponse: unknown;
+    try {
+      dummyResponse = form.dummyResponse.trim()
+        ? JSON.parse(form.dummyResponse)
+        : undefined;
+    } catch {
+      setSaving(false);
+      setError("Dummy response must be valid JSON");
+      return;
+    }
+
     const body = {
       title: form.title,
       slug: form.slug || undefined,
@@ -51,6 +62,7 @@ export default function AdminApisPage() {
       category: form.category,
       pricePerCall: parseFloat(form.pricePerCall),
       defaultQuota: parseInt(form.defaultQuota, 10),
+      dummyResponse,
       status: form.status,
     };
     try {

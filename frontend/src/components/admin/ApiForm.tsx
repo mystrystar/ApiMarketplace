@@ -14,6 +14,7 @@ export type ApiFormData = {
   category: string;
   pricePerCall: string;
   defaultQuota: string;
+  dummyResponse: string;
   status: string;
 };
 
@@ -25,6 +26,7 @@ export const emptyApiForm = (): ApiFormData => ({
   category: "",
   pricePerCall: "0",
   defaultQuota: "100",
+  dummyResponse: '{\n  "message": "Dummy API response"\n}',
   status: "APPROVED",
 });
 
@@ -36,6 +38,9 @@ export const apiToForm = (api: ApiItem): ApiFormData => ({
   category: api.category || "",
   pricePerCall: String(api.pricePerCall),
   defaultQuota: String(api.defaultQuota),
+  dummyResponse: api.dummyResponse
+    ? JSON.stringify(api.dummyResponse, null, 2)
+    : '{\n  "message": "Dummy API response"\n}',
   status: api.status,
 });
 
@@ -66,6 +71,14 @@ export function ApiForm({ form, onChange, onSubmit, onCancel, loading }: Props) 
       <Input label={ADMIN_LABELS.category} value={form.category} onChange={(e) => set("category", e.target.value)} />
       <Input label={ADMIN_LABELS.pricePerCall} type="number" step="0.0001" value={form.pricePerCall} onChange={(e) => set("pricePerCall", e.target.value)} />
       <Input label={ADMIN_LABELS.defaultQuota} type="number" value={form.defaultQuota} onChange={(e) => set("defaultQuota", e.target.value)} />
+      <label className="block text-sm sm:col-span-2">
+        <span className="mb-1 block text-gray-600">{ADMIN_LABELS.dummyResponse}</span>
+        <textarea
+          className="min-h-32 w-full rounded border border-gray-300 px-3 py-2 font-mono text-sm"
+          value={form.dummyResponse}
+          onChange={(e) => set("dummyResponse", e.target.value)}
+        />
+      </label>
       <Select
         label={ADMIN_LABELS.status}
         value={form.status}

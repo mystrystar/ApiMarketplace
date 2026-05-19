@@ -26,5 +26,6 @@ module.exports = {
     INVALID_API_KEY: 'Invalid API key',
     NO_SUBSCRIPTION: 'No active subscription for this API',
     QUOTA_EXHAUSTED: 'Quota exhausted',
+    ACTIVE_QUOTA_EXISTS: 'You can purchase this API again only after the current quota is exhausted',
   },
 };

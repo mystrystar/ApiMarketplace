@@ -27,13 +27,15 @@ export const MARKETPLACE_LABELS = {
 export const DASHBOARD_LABELS = {
   title: "My Dashboard",
   subscriptions: "Subscribed APIs",
+  purchaseHistory: "Purchase history",
   remainingQuota: "Remaining quota",
   totalCalls: "Total API calls",
   recentActivity: "Recent activity",
-  apiKey: "API Key",
   regenerate: "Regenerate key",
   copy: "Copy",
   noSubs: "No subscriptions yet",
+  noPurchases: "No purchases yet",
+  endpoint: "Endpoint",
 } as const;
 
 export const LOGS_LABELS = {
@@ -63,6 +65,7 @@ export const ADMIN_LABELS = {
   cancel: "Cancel",
   users: "Users",
   purchases: "Purchases",
+  userDetails: "User details",
   titleField: "Title",
   slug: "Slug",
   description: "Description",
@@ -70,6 +73,7 @@ export const ADMIN_LABELS = {
   category: "Category",
   pricePerCall: "Price per call",
   defaultQuota: "Default quota",
+  dummyResponse: "Dummy response JSON",
   status: "Status",
 } as const;
 
@@ -77,9 +81,12 @@ export const TABLE_COLS = {
   api: "API",
   date: "Date",
   status: "Status",
+  responseTime: "Time",
+  ipAddress: "IP",
   user: "User",
   email: "Email",
   role: "Role",
+  endpoint: "Endpoint",
   amount: "Amount",
   quota: "Quota",
   actions: "Actions",

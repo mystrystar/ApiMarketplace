@@ -5,8 +5,8 @@ export interface User {
   email: string;
   name?: string | null;
   role: Role;
-  apiKey?: string;
   createdAt?: string;
+  _count?: { apis?: number; purchases?: number; subscriptions?: number };
 }
 
 export interface ApiItem {
@@ -18,6 +18,7 @@ export interface ApiItem {
   category?: string | null;
   pricePerCall: number;
   defaultQuota: number;
+  dummyResponse?: unknown;
   status: string;
   provider?: { id: string; name?: string | null; email: string };
   _count?: { purchases?: number; apiCallLogs?: number };
@@ -25,17 +26,27 @@ export interface ApiItem {
 
 export interface Subscription {
   id: string;
+  apiKey: string;
   totalQuota: number;
   remainingQuota: number;
   status: string;
-  api: { id: string; title: string; slug: string; category?: string | null };
+  api: {
+    id: string;
+    title: string;
+    slug: string;
+    category?: string | null;
+    status?: string;
+  };
 }
 
 export interface ApiCallLog {
   id: string;
   statusCode: number;
+  responseTimeMs: number;
+  ipAddress?: string | null;
+  apiName: string;
   createdAt: string;
-  api: { id: string; title: string; slug: string };
+  api?: { id: string; title: string; slug: string } | null;
   user?: { id: string; email: string; name?: string | null };
 }
 
@@ -51,7 +62,15 @@ export interface Purchase {
 export interface DashboardData {
   user: User;
   subscriptions: Subscription[];
+  purchases: Purchase[];
   totalCalls: number;
+  recentLogs: ApiCallLog[];
+}
+
+export interface AdminUserDetails {
+  user: User;
+  subscriptions: Subscription[];
+  purchases: Purchase[];
   recentLogs: ApiCallLog[];
 }
 

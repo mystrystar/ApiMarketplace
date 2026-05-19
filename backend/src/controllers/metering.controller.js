@@ -1,37 +1,83 @@
 const prisma = require('../lib/prisma');
 const { API_STATUS, ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
 
+function getIpAddress(req) {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || null;
+}
+
+function getResponseTimeMs(startedAt) {
+  return Math.max(0, Date.now() - startedAt);
+}
+
+function getApiName(api, apiSlug) {
+  return api?.title || api?.slug || apiSlug || 'unknown';
+}
+
+async function logCall({ req, startedAt, user, api, subscription, statusCode }) {
+  return prisma.apiCallLog.create({
+    data: {
+      userId: user?.id || null,
+      apiId: api?.id || null,
+      subscriptionId: subscription?.id || null,
+      apiName: getApiName(api, req.params.apiSlug),
+      statusCode,
+      responseTimeMs: getResponseTimeMs(startedAt),
+      ipAddress: getIpAddress(req),
+    },
+  });
+}
+
 async function invoke(req, res, next) {
+  const startedAt = Date.now();
+  let user = null;
+  let api = null;
+  let subscription = null;
+
   try {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey || typeof apiKey !== 'string') {
+      await logCall({ req, startedAt, statusCode: 401 });
       return res.status(401).json({ error: ERRORS.API_KEY_REQUIRED });
     }
 
-    const user = await prisma.user.findUnique({ where: { apiKey } });
-    if (!user) {
-      return res.status(401).json({ error: ERRORS.INVALID_API_KEY });
-    }
-
-    const api = await prisma.api.findFirst({
+    api = await prisma.api.findFirst({
       where: { slug: req.params.apiSlug, status: API_STATUS.APPROVED },
     });
     if (!api) {
+      await logCall({ req, startedAt, statusCode: 404 });
       return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
     }
 
-    const subscription = await prisma.subscription.findFirst({
+    const keySubscription = await prisma.subscription.findUnique({
+      where: { apiKey },
+      include: { user: true },
+    });
+
+    if (!keySubscription) {
+      await logCall({ req, startedAt, api, statusCode: 401 });
+      return res.status(401).json({ error: ERRORS.INVALID_API_KEY });
+    }
+
+    user = keySubscription.user;
+
+    subscription = await prisma.subscription.findFirst({
       where: {
-        userId: user.id,
+        id: keySubscription.id,
         apiId: api.id,
         status: SUBSCRIPTION_STATUS.ACTIVE,
       },
     });
     if (!subscription) {
+      await logCall({ req, startedAt, user, api, statusCode: 403 });
       return res.status(403).json({ error: ERRORS.NO_SUBSCRIPTION });
     }
 
     if (subscription.remainingQuota <= 0) {
+      await logCall({ req, startedAt, user, api, subscription, statusCode: 429 });
       return res.status(429).json({ error: ERRORS.QUOTA_EXHAUSTED });
     }
 
@@ -48,7 +94,10 @@ async function invoke(req, res, next) {
           userId: user.id,
           apiId: api.id,
           subscriptionId: subscription.id,
+          apiName: getApiName(api, req.params.apiSlug),
           statusCode: 200,
+          responseTimeMs: getResponseTimeMs(startedAt),
+          ipAddress: getIpAddress(req),
         },
       });
 
@@ -61,13 +110,17 @@ async function invoke(req, res, next) {
     });
 
     if (!result) {
+      await logCall({ req, startedAt, user, api, subscription, statusCode: 429 });
       return res.status(429).json({ error: ERRORS.QUOTA_EXHAUSTED });
     }
 
     res.json({
       success: true,
       api: api.slug,
-      data: { message: 'Dummy API response', timestamp: new Date().toISOString() },
+      data: api.dummyResponse || {
+        message: 'Dummy API response',
+        timestamp: new Date().toISOString(),
+      },
       quota: { remaining: result.remainingQuota },
       logId: result.log.id,
     });

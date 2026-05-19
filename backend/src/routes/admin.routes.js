@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate, requireRole('ADMIN'));
 
 router.get('/users', adminController.listUsers);
+router.get('/users/:id', adminController.getUserDetails);
 router.patch('/users/:id/role', adminController.updateUserRole);
 
 router.get('/apis', adminController.listApis);

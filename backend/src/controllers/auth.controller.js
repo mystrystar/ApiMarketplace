@@ -2,7 +2,6 @@ const prisma = require('../lib/prisma');
 const { ERRORS } = require('../constants');
 const { hashPassword, comparePassword } = require('../utils/hash');
 const { signToken } = require('../utils/jwt');
-const { generateApiKey } = require('../utils/apiKey');
 
 function publicUser(user) {
   const { password, ...rest } = user;
@@ -23,7 +22,7 @@ async function register(req, res, next) {
 
     const hashed = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, apiKey: generateApiKey() },
+      data: { email, password: hashed, name },
     });
 
     const token = signToken({ userId: user.id, role: user.role });
