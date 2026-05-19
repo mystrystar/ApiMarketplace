@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 const { API_PUBLIC_SELECT } = require('../constants/apiSelect');
 const { API_STATUS, ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
 const { toSlug } = require('../utils/slug');
-const { generateApiKey } = require('../utils/apiKey');
+const { generateApiKey, hashApiKey } = require('../utils/apiKey');
 
 async function listApproved(req, res, next) {
   try {
@@ -23,7 +23,10 @@ async function listApproved(req, res, next) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ apis });
+    res.json({
+      success: true,
+      data: { apis },
+    });
   } catch (err) {
     next(err);
   }
@@ -37,10 +40,16 @@ async function getOne(req, res, next) {
     });
 
     if (!api) {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
 
-    res.json({ api });
+    res.json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     next(err);
   }
@@ -52,12 +61,18 @@ async function create(req, res, next) {
       req.body;
 
     if (!title || !baseUrl) {
-      return res.status(400).json({ error: 'Title and baseUrl are required' });
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Title and baseUrl are required' },
+      });
     }
 
     const apiSlug = slug ? toSlug(slug) : toSlug(title);
     if (!apiSlug) {
-      return res.status(400).json({ error: 'A valid slug is required' });
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'A valid slug is required' },
+      });
     }
 
     const api = await prisma.api.create({
@@ -74,7 +89,10 @@ async function create(req, res, next) {
       select: API_PUBLIC_SELECT,
     });
 
-    res.status(201).json({ api });
+    res.status(201).json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     next(err);
   }
@@ -88,7 +106,10 @@ async function listMine(req, res, next) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ apis });
+    res.json({
+      success: true,
+      data: { apis },
+    });
   } catch (err) {
     next(err);
   }
@@ -101,7 +122,10 @@ async function updateMine(req, res, next) {
     });
 
     if (!existing) {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
 
     const { title, description, baseUrl, category, pricePerCall } = req.body;
@@ -119,7 +143,10 @@ async function updateMine(req, res, next) {
       select: API_PUBLIC_SELECT,
     });
 
-    res.json({ api });
+    res.json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     next(err);
   }
@@ -132,7 +159,10 @@ async function removeMine(req, res, next) {
     });
 
     if (!existing) {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
 
     await prisma.api.delete({ where: { id: existing.id } });
@@ -149,7 +179,10 @@ async function purchase(req, res, next) {
     });
 
     if (!api) {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
 
     const amount = api.pricePerCall * api.defaultQuota;
@@ -158,7 +191,10 @@ async function purchase(req, res, next) {
     });
 
     if (existing?.status === SUBSCRIPTION_STATUS.ACTIVE && existing.remainingQuota > 0) {
-      return res.status(409).json({ error: ERRORS.ACTIVE_QUOTA_EXISTS });
+      return res.status(409).json({
+        success: false,
+        error: ERRORS.ACTIVE_QUOTA_EXISTS,
+      });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -182,12 +218,15 @@ async function purchase(req, res, next) {
           },
         });
       } else {
+        const apiKey = generateApiKey();
+        const apiKeyHash = hashApiKey(apiKey);
         subscription = await tx.subscription.create({
           data: {
             userId: req.user.id,
             apiId: api.id,
             purchaseId: purchaseRecord.id,
-            apiKey: generateApiKey(),
+            apiKey,
+            apiKeyHash,
             totalQuota: api.defaultQuota,
             remainingQuota: api.defaultQuota,
           },
@@ -197,7 +236,10 @@ async function purchase(req, res, next) {
       return { purchase: purchaseRecord, subscription };
     });
 
-    res.status(201).json(result);
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
   } catch (err) {
     next(err);
   }

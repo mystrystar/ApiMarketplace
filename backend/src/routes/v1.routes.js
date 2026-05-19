@@ -3,6 +3,6 @@ const meteringController = require('../controllers/metering.controller');
 
 const router = Router();
 
-router.post('/:apiSlug', meteringController.invoke);
+router.all('/:apiSlug', meteringController.invoke);
 
 module.exports = router;

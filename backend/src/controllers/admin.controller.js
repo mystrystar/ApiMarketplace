@@ -24,7 +24,10 @@ async function listUsers(req, res, next) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ users });
+    res.json({
+      success: true,
+      data: { users },
+    });
   } catch (err) {
     next(err);
   }
@@ -44,7 +47,10 @@ async function getUserDetails(req, res, next) {
     });
 
     if (!user) {
-      return res.status(404).json({ error: ERRORS.USER_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.USER_NOT_FOUND,
+      });
     }
 
     const [purchases, subscriptions, recentLogs] = await Promise.all([
@@ -73,7 +79,10 @@ async function getUserDetails(req, res, next) {
       }),
     ]);
 
-    res.json({ user, purchases, subscriptions, recentLogs });
+    res.json({
+      success: true,
+      data: { user, purchases, subscriptions, recentLogs },
+    });
   } catch (err) {
     next(err);
   }
@@ -89,7 +98,10 @@ async function listApis(req, res, next) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ apis });
+    res.json({
+      success: true,
+      data: { apis },
+    });
   } catch (err) {
     next(err);
   }
@@ -110,12 +122,18 @@ async function createApi(req, res, next) {
     } = req.body;
 
     if (!title || !baseUrl) {
-      return res.status(400).json({ error: 'Title and baseUrl are required' });
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Title and baseUrl are required' },
+      });
     }
 
     const apiSlug = slug ? toSlug(slug) : toSlug(title);
     if (!apiSlug) {
-      return res.status(400).json({ error: 'A valid slug is required' });
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'A valid slug is required' },
+      });
     }
 
     const api = await prisma.api.create({
@@ -133,7 +151,10 @@ async function createApi(req, res, next) {
       },
     });
 
-    res.status(201).json({ api });
+    res.status(201).json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     next(err);
   }
@@ -166,10 +187,16 @@ async function updateApi(req, res, next) {
       },
     });
 
-    res.json({ api });
+    res.json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
     next(err);
   }
@@ -185,7 +212,10 @@ async function listPendingApis(req, res, next) {
       orderBy: { createdAt: 'asc' },
     });
 
-    res.json({ apis });
+    res.json({
+      success: true,
+      data: { apis },
+    });
   } catch (err) {
     next(err);
   }
@@ -197,7 +227,11 @@ async function updateApiStatus(req, res, next) {
 
     if (![API_STATUS.APPROVED, API_STATUS.REJECTED].includes(status)) {
       return res.status(400).json({
-        error: `Status must be ${API_STATUS.APPROVED} or ${API_STATUS.REJECTED}`,
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Status must be ${API_STATUS.APPROVED} or ${API_STATUS.REJECTED}`,
+        },
       });
     }
 
@@ -209,10 +243,16 @@ async function updateApiStatus(req, res, next) {
       },
     });
 
-    res.json({ api });
+    res.json({
+      success: true,
+      data: { api },
+    });
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
     next(err);
   }
@@ -220,11 +260,18 @@ async function updateApiStatus(req, res, next) {
 
 async function deleteApi(req, res, next) {
   try {
-    await prisma.api.delete({ where: { id: req.params.id } });
+    // Soft delete: set deletedAt instead of hard delete
+    await prisma.api.update({
+      where: { id: req.params.id },
+      data: { deletedAt: new Date() },
+    });
     res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
     next(err);
   }
@@ -245,7 +292,10 @@ async function listPurchases(req, res, next) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ purchases });
+    res.json({
+      success: true,
+      data: { purchases },
+    });
   } catch (err) {
     next(err);
   }
@@ -315,13 +365,16 @@ async function getAnalytics(req, res, next) {
     }));
 
     res.json({
-      totalUsers,
-      totalApis,
-      totalCallsToday,
-      revenue: revenueResult._sum.amount || 0,
-      topApis,
-      topUsers,
-      recentUsers,
+      success: true,
+      data: {
+        totalUsers,
+        totalApis,
+        totalCallsToday,
+        revenue: revenueResult._sum.amount || 0,
+        topApis,
+        topUsers,
+        recentUsers,
+      },
     });
   } catch (err) {
     next(err);
@@ -334,7 +387,10 @@ async function listLogs(req, res, next) {
       query: req.query,
       includeUser: true,
     });
-    res.json(result);
+    res.json({
+      success: true,
+      data: result,
+    });
   } catch (err) {
     next(err);
   }

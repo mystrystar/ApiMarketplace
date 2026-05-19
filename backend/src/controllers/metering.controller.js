@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { API_STATUS, ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
+const { hashApiKey } = require('../utils/apiKey');
 
 function getIpAddress(req) {
   const forwardedFor = req.headers['x-forwarded-for'];
@@ -41,7 +42,10 @@ async function invoke(req, res, next) {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey || typeof apiKey !== 'string') {
       await logCall({ req, startedAt, statusCode: 401 });
-      return res.status(401).json({ error: ERRORS.API_KEY_REQUIRED });
+      return res.status(401).json({
+        success: false,
+        error: ERRORS.MISSING_API_KEY,
+      });
     }
 
     api = await prisma.api.findFirst({
@@ -49,17 +53,25 @@ async function invoke(req, res, next) {
     });
     if (!api) {
       await logCall({ req, startedAt, statusCode: 404 });
-      return res.status(404).json({ error: ERRORS.API_NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.API_NOT_FOUND,
+      });
     }
 
+    // Hash the API key before database lookup
+    const apiKeyHash = hashApiKey(apiKey);
     const keySubscription = await prisma.subscription.findUnique({
-      where: { apiKey },
+      where: { apiKeyHash },
       include: { user: true },
     });
 
     if (!keySubscription) {
       await logCall({ req, startedAt, api, statusCode: 401 });
-      return res.status(401).json({ error: ERRORS.INVALID_API_KEY });
+      return res.status(401).json({
+        success: false,
+        error: ERRORS.INVALID_API_KEY,
+      });
     }
 
     user = keySubscription.user;
@@ -73,22 +85,40 @@ async function invoke(req, res, next) {
     });
     if (!subscription) {
       await logCall({ req, startedAt, user, api, statusCode: 403 });
-      return res.status(403).json({ error: ERRORS.NO_SUBSCRIPTION });
+      return res.status(403).json({
+        success: false,
+        error: ERRORS.NO_SUBSCRIPTION,
+      });
     }
 
     if (subscription.remainingQuota <= 0) {
       await logCall({ req, startedAt, user, api, subscription, statusCode: 429 });
-      return res.status(429).json({ error: ERRORS.QUOTA_EXHAUSTED });
+      return res.status(429).json({
+        success: false,
+        error: ERRORS.QUOTA_EXHAUSTED,
+      });
     }
 
+    // Execute quota decrement with FOR UPDATE lock inside transaction
     const result = await prisma.$transaction(async (tx) => {
-      const updated = await tx.subscription.updateMany({
-        where: { id: subscription.id, remainingQuota: { gt: 0 } },
+      // Acquire row-level lock with FOR UPDATE
+      const locked = await tx.$queryRaw`
+        SELECT id, "remainingQuota" FROM "Subscription" 
+        WHERE id = ${subscription.id}
+        FOR UPDATE
+      `;
+
+      if (!locked || locked.length === 0 || locked[0].remainingQuota <= 0) {
+        return null;
+      }
+
+      // Safe to decrement now
+      const updated = await tx.subscription.update({
+        where: { id: subscription.id },
         data: { remainingQuota: { decrement: 1 } },
       });
 
-      if (updated.count === 0) return null;
-
+      // Log the successful call
       const log = await tx.apiCallLog.create({
         data: {
           userId: user.id,
@@ -101,28 +131,28 @@ async function invoke(req, res, next) {
         },
       });
 
-      const sub = await tx.subscription.findUnique({
-        where: { id: subscription.id },
-        select: { remainingQuota: true },
-      });
-
-      return { log, remainingQuota: sub.remainingQuota };
+      return { log, remainingQuota: updated.remainingQuota };
     });
 
     if (!result) {
       await logCall({ req, startedAt, user, api, subscription, statusCode: 429 });
-      return res.status(429).json({ error: ERRORS.QUOTA_EXHAUSTED });
+      return res.status(429).json({
+        success: false,
+        error: ERRORS.QUOTA_EXHAUSTED,
+      });
     }
 
     res.json({
       success: true,
-      api: api.slug,
       data: api.dummyResponse || {
         message: 'Dummy API response',
         timestamp: new Date().toISOString(),
       },
-      quota: { remaining: result.remainingQuota },
-      logId: result.log.id,
+      meta: {
+        quotaRemaining: result.remainingQuota,
+        logId: result.log.id,
+        apiSlug: api.slug,
+      },
     });
   } catch (err) {
     next(err);

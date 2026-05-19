@@ -45,7 +45,7 @@ model Api {
   description  String?
   baseUrl      String
   category     String?
-  pricePerCall Float          @default(0)
+  pricePerCall Decimal        @default(0) @db.Decimal(10, 4)
   defaultQuota Int            @default(100)
   dummyResponse Json?
   status       ApiStatus      @default(PENDING)
@@ -53,16 +53,19 @@ model Api {
   provider     User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
   purchases    Purchase[]
   subscriptions Subscription[]
   apiCallLogs  ApiCallLog[]
+
+  @@index([deletedAt])
 }
 
 model Purchase {
   id           String        @id @default(cuid())
   userId       String
   apiId        String
-  amount       Float         @default(0)
+  amount       Decimal       @default(0) @db.Decimal(10, 4)
   quota        Int
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   api          Api           @relation(fields: [apiId], references: [id], onDelete: Cascade)
@@ -79,6 +82,7 @@ model Subscription {
   apiId          String
   purchaseId     String             @unique
   apiKey         String             @unique
+  apiKeyHash     String             @unique
   totalQuota     Int
   remainingQuota Int
   status         SubscriptionStatus @default(ACTIVE)
@@ -92,6 +96,7 @@ model Subscription {
   @@unique([userId, apiId])
   @@index([userId])
   @@index([apiId])
+  @@index([apiKeyHash])
 }
 
 model ApiCallLog {

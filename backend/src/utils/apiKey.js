@@ -4,4 +4,8 @@ function generateApiKey() {
   return `ak_${crypto.randomBytes(24).toString('hex')}`;
 }
 
-module.exports = { generateApiKey };
+function hashApiKey(apiKey) {
+  return crypto.createHash('sha256').update(apiKey).digest('hex');
+}
+
+module.exports = { generateApiKey, hashApiKey };

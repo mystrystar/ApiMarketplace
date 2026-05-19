@@ -1,6 +1,6 @@
 const prisma = require('../lib/prisma');
 const { ERRORS, SUBSCRIPTION_STATUS } = require('../constants');
-const { generateApiKey } = require('../utils/apiKey');
+const { generateApiKey, hashApiKey } = require('../utils/apiKey');
 const { fetchPaginatedLogs } = require('../utils/logsQuery');
 
 async function getProfile(req, res, next) {
@@ -17,7 +17,10 @@ async function getProfile(req, res, next) {
       },
     });
 
-    res.json({ user });
+    res.json({
+      success: true,
+      data: { user },
+    });
   } catch (err) {
     next(err);
   }
@@ -33,7 +36,10 @@ async function updateProfile(req, res, next) {
       select: { id: true, email: true, name: true, role: true },
     });
 
-    res.json({ user });
+    res.json({
+      success: true,
+      data: { user },
+    });
   } catch (err) {
     next(err);
   }
@@ -91,13 +97,16 @@ async function getDashboard(req, res, next) {
     const quotaHealth = totalQuota ? Math.round((remainingQuota / totalQuota) * 100) : 0;
 
     res.json({
-      user,
-      subscriptions,
-      purchases,
-      totalCalls,
-      callsToday,
-      quotaHealth,
-      recentLogs,
+      success: true,
+      data: {
+        user,
+        subscriptions,
+        purchases,
+        totalCalls,
+        callsToday,
+        quotaHealth,
+        recentLogs,
+      },
     });
   } catch (err) {
     next(err);
@@ -107,24 +116,34 @@ async function getDashboard(req, res, next) {
 async function regenerateApiKey(req, res, next) {
   try {
     const apiKey = generateApiKey();
+    const apiKeyHash = hashApiKey(apiKey);
     const subscription = await prisma.subscription.findFirst({
       where: { id: req.params.subscriptionId, userId: req.user.id },
       select: { id: true },
     });
 
     if (!subscription) {
-      return res.status(404).json({ error: ERRORS.NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.NOT_FOUND,
+      });
     }
 
     await prisma.subscription.update({
       where: { id: subscription.id },
-      data: { apiKey },
+      data: { apiKey, apiKeyHash },
     });
 
-    res.json({ apiKey });
+    res.json({
+      success: true,
+      data: { apiKey },
+    });
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ error: ERRORS.NOT_FOUND });
+      return res.status(404).json({
+        success: false,
+        error: ERRORS.NOT_FOUND,
+      });
     }
     next(err);
   }
@@ -136,7 +155,10 @@ async function getLogs(req, res, next) {
       query: req.query,
       userId: req.user.id,
     });
-    res.json(result);
+    res.json({
+      success: true,
+      data: result,
+    });
   } catch (err) {
     next(err);
   }
