@@ -233,6 +233,9 @@ Public endpoint:
 ```text
 GET|POST /v1/:apiSlug
 Header: x-api-key: YOUR_API_KEY
+
+OR
+curl.exe -X POST "http://localhost:3000/v1/weather" -H "x-api-key: YOUR_API_KEY"
 ```
 
 ### POST Example
@@ -249,6 +252,8 @@ curl -X POST "http://localhost:3000/v1/weather" `
 ```powershell
 curl -X GET "http://localhost:3000/v1/weather" `
   -H "x-api-key: YOUR_API_KEY"
+OR
+curl.exe -X GET "http://localhost:3000/v1/weather" -H "x-api-key: YOUR_API_KEY"
 ```
 
 ### Metering Flow
