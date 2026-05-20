@@ -72,7 +72,12 @@ async function main() {
 
   // Create Sample API
   let weatherApi = await prisma.api.findUnique({
-    where: { slug: 'weather' },
+    where: {
+      slug_method: {
+        slug: 'weather',
+        method: 'POST',
+      },
+    },
   });
 
   if (!weatherApi) {

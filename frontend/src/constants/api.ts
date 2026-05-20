@@ -22,6 +22,4 @@ export const API_PATHS = {
   adminLogs: "/admin/logs",
 } as const;
 
-export const HTTP_METHOD = "POST";
-
 export const DEFAULT_PAGE_SIZE = 20;
