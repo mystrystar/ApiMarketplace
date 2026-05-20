@@ -62,7 +62,7 @@ export function OnboardingModal({ user }: Props) {
     const frame = window.requestAnimationFrame(() => {
       setStep(0);
       try {
-        setIsOpen(localStorage.getItem(onboardingKey) !== "true");
+        setIsOpen(sessionStorage.getItem(onboardingKey) !== "true");
       } catch {
         setIsOpen(false);
       }
@@ -73,7 +73,7 @@ export function OnboardingModal({ user }: Props) {
 
   const completeOnboarding = () => {
     try {
-      localStorage.setItem(onboardingKey, "true");
+      sessionStorage.setItem(onboardingKey, "true");
     } catch {
       // Storage can be unavailable in strict browser modes; closing should still work.
     }
@@ -117,7 +117,7 @@ export function OnboardingModal({ user }: Props) {
               onClick={completeOnboarding}
               className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-lg leading-none text-[var(--muted)] transition hover:border-[var(--border-h)] hover:text-white"
             >
-              ×
+              x
             </button>
           </div>
         </div>

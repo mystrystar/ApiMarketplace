@@ -25,6 +25,13 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function clearOnboardingForRole(role: User["role"]) {
+  if (typeof window === "undefined") return;
+  const key =
+    role === "ADMIN" ? "onboarding_seen_admin" : "onboarding_seen_consumer";
+  sessionStorage.removeItem(key);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => getStoredUser<User>());
   const [loading, setLoading] = useState(true);
@@ -58,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         API_PATHS.login,
         { method: "POST", body: { email, password }, auth: false },
       );
+      clearOnboardingForRole(data.user.role);
       setAuth(data.token, data.user);
       setUser(data.user);
       router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
@@ -71,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         API_PATHS.register,
         { method: "POST", body: { email, password, name }, auth: false },
       );
+      clearOnboardingForRole(data.user.role);
       setAuth(data.token, data.user);
       setUser(data.user);
       router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
