@@ -1,33 +1,81 @@
 # API Marketplace With Usage Metering
 
-Mini RapidAPI-style platform where admins list dummy APIs, users buy quota packs, receive API keys, and every public API call is authenticated, metered, logged, and deducted from quota.
+A RapidAPI-inspired marketplace where users purchase API quota, authenticate using API keys, and every API call is securely metered, logged, rate-limited, and deducted from quota.
 
-## Stack
+## Tech Stack
 
-- Frontend: Next.js, React, TypeScript
-- Backend: Node.js, Express
-- Database: SQLite
-- ORM: Prisma
-- Auth: JWT, bcrypt
+### Frontend
+
+* Next.js
+* React
+* TypeScript
+
+### Backend
+
+* Node.js
+* Express
+
+### Database & Auth
+
+* SQLite
+* Prisma ORM
+* JWT Authentication
+* bcrypt password hashing
+
+---
 
 ## Features
 
-- User signup/login and admin/user role protection
-- Admin catalog CRUD with GET/POST method support
-- Optional upstream base URL
-- Mock API purchase and quota refill/top-up
-- API key generation, regeneration, and hashed lookup
-- Public metered endpoint: `/v1/:apiSlug`
-- Quota decrement, call logging, status codes, response time, IP tracking
-- User dashboard, recent activity, logs, CSV export
-- Admin dashboard: users, purchases, logs, revenue, top APIs/users
-- Soft delete for APIs
-- Auto-generated docs page per API
-- In-memory API key rate limit: `10 calls/sec`
+### Authentication & Access
 
-## Setup
+* User signup/login
+* JWT-based authentication
+* Role-based access (`ADMIN` / `CONSUMER`)
 
-Backend:
+### API Marketplace
+
+* Browse available APIs
+* API purchase and quota top-up
+* API key generation & regeneration
+* Auto-generated API documentation page
+* Support for `GET` and `POST` APIs
+* Optional upstream base URL support
+* Soft delete for APIs
+
+### Usage Metering
+
+* Public metered endpoint: `/v1/:apiSlug`
+* API key authentication
+* Quota validation & deduction
+* API call logging
+* Response time tracking
+* Status code logging
+* IP tracking
+* In-memory rate limiting (`10 calls/sec`)
+
+### Consumer Portal
+
+* Dashboard overview
+* Purchase history
+* Usage logs
+* CSV export
+* Subscription management
+* API key access & regeneration
+
+### Admin Portal
+
+* API catalog management
+* User management
+* Purchase tracking
+* Revenue insights
+* Usage logs
+* Top APIs & top users analytics
+
+---
+
+## Getting Started
+
+### Backend Setup
 
 ```powershell
 cd backend
@@ -39,7 +87,7 @@ npm run db:seed
 npm run dev
 ```
 
-Frontend:
+### Frontend Setup
 
 ```powershell
 cd frontend
@@ -47,7 +95,27 @@ npm install
 npm run dev
 ```
 
-URLs:
+---
+
+## Quick Start
+
+Once both servers are running:
+
+1. Login using seeded credentials
+2. Browse APIs in the marketplace
+3. Purchase an API subscription
+4. Use the generated API key to test metered endpoints
+5. View logs, quota usage, and subscriptions
+6. Login as admin to explore platform analytics and management tools
+
+Suggested flow:
+
+**Consumer → Purchase API → Test API Key → View Logs & Quota**
+**Admin → Review APIs → Purchases → Analytics**
+
+---
+
+## Running URLs
 
 ```text
 Frontend: http://localhost:3001
@@ -55,42 +123,54 @@ Backend:  http://localhost:3000
 Health:   http://localhost:3000/api/health
 ```
 
-## Environment
+---
 
-`backend/.env`
+## Environment Variables
+
+### `backend/.env`
 
 ```env
 PORT=3000
 DATABASE_URL="file:./dev.db"
 JWT_SECRET=change-this-to-a-long-random-string
 JWT_EXPIRES_IN=7d
+
 ADMIN_EMAIL=admin@marketplace.local
 ADMIN_PASSWORD=admin123
+
+CONSUMER_EMAIL=consumer@marketplace.local
+CONSUMER_PASSWORD=consumer123
 ```
 
-Optional `frontend/.env.local`
+### Optional `frontend/.env.local`
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 ```
 
-## Seeded Logins
+---
 
-Admin:
+## Seeded Accounts
 
-```text
-admin@marketplace.local / admin123
-```
-
-Sample user:
+### Admin
 
 ```text
-consumer@marketplace.local / consumer123
+Email: admin@marketplace.local
+Password: admin123
 ```
 
-## Main API Routes
+### Consumer
 
-Auth:
+```text
+Email: consumer@marketplace.local
+Password: consumer123
+```
+
+---
+
+## API Routes
+
+### Authentication
 
 ```text
 POST /api/auth/register
@@ -98,7 +178,7 @@ POST /api/auth/login
 GET  /api/auth/me
 ```
 
-Catalog/user:
+### Marketplace & Consumer
 
 ```text
 GET  /api/apis
@@ -109,7 +189,7 @@ GET  /api/users/logs
 POST /api/users/subscriptions/:subscriptionId/api-key/regenerate
 ```
 
-Admin:
+### Admin
 
 ```text
 GET    /api/admin/analytics
@@ -123,7 +203,9 @@ GET    /api/admin/purchases
 GET    /api/admin/logs
 ```
 
-Create API example:
+---
+
+## Example API Creation Payload
 
 ```json
 {
@@ -135,21 +217,28 @@ Create API example:
   "category": "data",
   "pricePerCall": 0.01,
   "defaultQuota": 10,
-  "dummyResponse": { "message": "Sunny" },
+  "dummyResponse": {
+    "message": "Sunny"
+  },
   "status": "APPROVED"
 }
 ```
 
-## Metered Calls
+---
+
+## Metered API Calls
 
 Public endpoint:
 
 ```text
 GET|POST /v1/:apiSlug
 Header: x-api-key: YOUR_API_KEY
+
+OR
+curl.exe -X POST "http://localhost:3000/v1/weather" -H "x-api-key: YOUR_API_KEY"
 ```
 
-POST example:
+### POST Example
 
 ```powershell
 curl -X POST "http://localhost:3000/v1/weather" `
@@ -158,21 +247,29 @@ curl -X POST "http://localhost:3000/v1/weather" `
   -d "{ `"sample`": true }"
 ```
 
-GET example:
+### GET Example
 
 ```powershell
 curl -X GET "http://localhost:3000/v1/weather" `
   -H "x-api-key: YOUR_API_KEY"
+OR
+curl.exe -X GET "http://localhost:3000/v1/weather" -H "x-api-key: YOUR_API_KEY"
 ```
 
-Metering flow:
+### Metering Flow
 
 ```text
-validate API key -> check subscription -> check method -> check quota
--> rate limit -> decrement quota -> log call -> return dummy response
+Validate API key
+→ Verify subscription
+→ Validate request method
+→ Check quota
+→ Apply rate limiting
+→ Deduct quota
+→ Log request
+→ Return dummy response
 ```
 
-Common errors:
+### Common Errors
 
 ```text
 401 MISSING_API_KEY / INVALID_API_KEY
@@ -181,30 +278,12 @@ Common errors:
 429 QUOTA_EXHAUSTED / RATE_LIMITED
 ```
 
-## Frontend Pages
-
-User:
-
-```text
-/marketplace
-/marketplace/:id/docs
-/dashboard
-/logs
-```
-
-Admin:
-
-```text
-/admin
-/admin/apis
-/admin/users
-/admin/purchases
-/logs
-```
+---
 
 ## Notes
 
-- Payments are mocked with Buy/Refill buttons.
-- API keys are looked up by hash.
-- Rate limiting is in-memory and resets on backend restart.
-- If Prisma Client generation fails on Windows, stop the backend and rerun `npm run db:generate`.
+* Payments are mocked via **Buy** and **Refill** actions.
+* API keys support **hashed lookup with backward-compatible validation**.
+* Rate limiting is **in-memory** and resets when the backend restarts.
+* If Prisma Client generation fails on Windows, stop the backend and rerun:
+
