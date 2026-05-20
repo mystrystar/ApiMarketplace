@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-[var(--bg-primary)]">
       <Sidebar />
       <main className="flex-1 overflow-auto p-4 pb-24 md:p-8">{children}</main>
+      <OnboardingModal user={user} />
     </div>
   );
 }
