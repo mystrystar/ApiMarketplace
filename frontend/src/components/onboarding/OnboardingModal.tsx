@@ -8,7 +8,6 @@ import type { User } from "@/types";
 
 const onboardingContent = {
   ADMIN: {
-    storageKey: "onboarding_seen_admin",
     welcomeTitle: "Welcome to the Admin Portal",
     welcomeSubtitle: "Manage APIs and platform operations efficiently.",
     features: [
@@ -24,7 +23,6 @@ const onboardingContent = {
     ctaRoute: ROUTES.admin,
   },
   CONSUMER: {
-    storageKey: "onboarding_seen_consumer",
     welcomeTitle: "Welcome to API Marketplace",
     welcomeSubtitle: "Discover, subscribe to, and manage APIs from one place.",
     features: [
@@ -45,11 +43,16 @@ type Props = {
   user: User;
 };
 
+function getOnboardingKey(role: User["role"]) {
+  return role === "ADMIN" ? "onboarding_seen_admin" : "onboarding_seen_consumer";
+}
+
 export function OnboardingModal({ user }: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
 
+  const onboardingKey = useMemo(() => getOnboardingKey(user.role), [user.role]);
   const content = useMemo(
     () => onboardingContent[user.role === "ADMIN" ? "ADMIN" : "CONSUMER"],
     [user.role],
@@ -57,19 +60,20 @@ export function OnboardingModal({ user }: Props) {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
+      setStep(0);
       try {
-        setIsOpen(localStorage.getItem(content.storageKey) !== "true");
+        setIsOpen(localStorage.getItem(onboardingKey) !== "true");
       } catch {
         setIsOpen(false);
       }
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [content.storageKey]);
+  }, [onboardingKey]);
 
   const completeOnboarding = () => {
     try {
-      localStorage.setItem(content.storageKey, "true");
+      localStorage.setItem(onboardingKey, "true");
     } catch {
       // Storage can be unavailable in strict browser modes; closing should still work.
     }
