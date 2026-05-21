@@ -5,6 +5,17 @@ const { generateApiKey, hashApiKey } = require('../src/utils/apiKey');
 
 const prisma = new PrismaClient();
 
+function requireEnv(name) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} environment variable is required for seeding`);
+    console.log(`⚠️ ${name} not set, skipping related seed data`);
+  }
+
+  return value;
+}
+
 async function main() {
   const subscriptions = await prisma.subscription.findMany({
     select: { id: true, apiKey: true, apiKeyHash: true },
@@ -20,18 +31,10 @@ async function main() {
     }
   }
 
-  const adminEmail =
-    process.env.ADMIN_EMAIL || 'admin@marketplace.local';
-  const adminPassword =
-    process.env.ADMIN_PASSWORD || 'admin123';
-
-  const consumerEmail =
-    process.env.CONSUMER_EMAIL ||
-    'consumer@marketplace.local';
-
-  const consumerPassword =
-    process.env.CONSUMER_PASSWORD ||
-    'consumer123';
+  const adminEmail = requireEnv('ADMIN_EMAIL');
+  const adminPassword = requireEnv('ADMIN_PASSWORD');
+  const consumerEmail = requireEnv('CONSUMER_EMAIL');
+  const consumerPassword = requireEnv('CONSUMER_PASSWORD');
 
   // Create Admin User
   let admin = await prisma.user.findUnique({
