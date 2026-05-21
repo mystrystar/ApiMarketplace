@@ -2,6 +2,8 @@
 
 A RapidAPI-inspired marketplace where users purchase API quota, authenticate using API keys, and every API call is securely metered, logged, rate-limited, and deducted from quota.
 
+here is the loom link for better workflow understanding 
+https://www.loom.com/share/300ecca158cc4bc8bfebf70e5f90fea0
 ## Tech Stack
 
 ### Frontend
