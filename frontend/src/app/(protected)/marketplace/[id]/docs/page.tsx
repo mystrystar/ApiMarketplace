@@ -24,7 +24,10 @@ export default function ApiDocsPage() {
     return <p className="text-sm text-[var(--text-muted)]">Loading...</p>;
   }
 
-  const origin = API_BASE.replace(/\/api$/, "");
+  const origin =
+    typeof window === "undefined"
+      ? ""
+      : new URL(API_BASE, window.location.origin).origin;
   const sampleBody =
     api.method === "GET"
       ? ""

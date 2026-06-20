@@ -32,7 +32,11 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { method = "GET", body, auth = true, params } = options;
 
-  const url = new URL(`${API_BASE}${path}`);
+  const requestUrl = `${API_BASE}${path}`;
+  const url =
+    typeof window === "undefined"
+      ? new URL(requestUrl, "http://localhost")
+      : new URL(requestUrl, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== "") {

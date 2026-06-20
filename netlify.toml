@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "frontend/.next"
+
+[functions]
+  directory = "netlify/functions"
+  included_files = [
+    "backend/prisma/**",
+    "node_modules/.prisma/client/**",
+    "backend/node_modules/.prisma/client/**"
+  ]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/v1/*"
+  to = "/.netlify/functions/api/v1/:splat"
+  status = 200
+  force = true
