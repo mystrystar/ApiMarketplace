@@ -1,9 +1,31 @@
-# API Marketplace With Usage Metering
+# API Marketplace
 
-A RapidAPI-inspired marketplace where users purchase API quota, authenticate using API keys, and every API call is securely metered, logged, rate-limited, and deducted from quota.
+A full-stack, RapidAPI-inspired marketplace where users discover APIs, purchase request quota, receive API keys, and monitor every metered call. Providers and administrators can manage the catalog, subscriptions, purchases, and usage analytics from one application.
 
-here is the loom link for better workflow understanding 
-https://www.loom.com/share/300ecca158cc4bc8bfebf70e5f90fea0
+**Live application:** [apimarketplaceforapi.netlify.app](https://apimarketplaceforapi.netlify.app/)
+
+**Demo walkthrough:** [Watch on Loom](https://www.loom.com/share/300ecca158cc4bc8bfebf70e5f90fea0)
+
+## What you can do
+
+- Create an account, browse the API catalog, and purchase API quota.
+- Receive a subscription API key and call a purchased API through `/v1/:apiSlug`.
+- Track request logs, response times, quota consumption, and subscriptions.
+- Use the administrator portal to manage APIs, users, purchases, and marketplace analytics.
+- Deploy the Next.js frontend and Express API together on Netlify, backed by PostgreSQL.
+
+## Quick links
+
+| Need | Start here |
+| --- | --- |
+| Use the deployed application | [Live app](https://apimarketplaceforapi.netlify.app/) |
+| Run locally | [Getting Started](#getting-started) |
+| Deploy your own copy | [Netlify + PostgreSQL deployment](#deploy-to-netlify-with-postgresql) |
+| Call a purchased API | [Usage guide](USAGE.md) |
+| Full deployment details | [DEPLOYMENT.md](DEPLOYMENT.md) |
+
+---
+
 ## Tech Stack
 
 ### Frontend
@@ -90,6 +112,7 @@ npm run dev
 ```
 
 For a complete local-development and free Netlify deployment guide, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For admin and API-key usage examples, see [USAGE.md](USAGE.md).
 
 ### Frontend Setup
 
@@ -126,6 +149,49 @@ Frontend: http://localhost:3001
 Backend:  http://localhost:3000
 Health:   http://localhost:3000/api/health
 ```
+
+---
+
+## Deploy to Netlify with PostgreSQL
+
+The frontend and Express backend deploy together as one Netlify site. The Next.js frontend is served normally, while the backend runs as a Netlify Function behind `/api/*` and `/v1/*`. PostgreSQL is hosted externally (the free [Neon](https://neon.tech) tier works well).
+
+1. Create a Neon PostgreSQL project and copy its pooled `postgresql://...` connection string.
+2. Import this GitHub repository into Netlify.
+3. In Netlify build settings, leave **Base directory** empty and set **Package directory** to `frontend`.
+4. Add these Netlify environment variables:
+
+```env
+DATABASE_URL=your-neon-pooled-postgresql-connection-string
+JWT_SECRET=a-long-unique-random-production-secret
+JWT_EXPIRES_IN=7d
+NODE_ENV=production
+ADMIN_EMAIL=admin@your-domain.com
+ADMIN_PASSWORD=a-strong-admin-password
+CONSUMER_EMAIL=consumer@your-domain.com
+CONSUMER_PASSWORD=a-strong-demo-password
+```
+
+5. Deploy the `main` branch.
+
+Production deploys automatically apply Prisma migrations and seed the database. The `ADMIN_EMAIL` account is created or promoted to the `ADMIN` role on every production deploy. Never commit real passwords, database URLs, JWT secrets, or API keys.
+
+After deployment, verify the API:
+
+```powershell
+curl.exe "https://YOUR-SITE.netlify.app/api/health"
+```
+
+Call the seeded Weather API only with a valid API key from a purchased subscription:
+
+```powershell
+curl.exe -X POST "https://YOUR-SITE.netlify.app/v1/weather" `
+  -H "x-api-key: YOUR_API_KEY" `
+  -H "Content-Type: application/json" `
+  -d "{}"
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete walkthrough and [USAGE.md](USAGE.md) for admin and API-key usage.
 
 ---
 

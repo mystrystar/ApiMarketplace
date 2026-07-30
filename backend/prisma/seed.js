@@ -7,12 +7,7 @@ const prisma = new PrismaClient();
 
 function requireEnv(name) {
   const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`${name} environment variable is required for seeding`);
-    console.log(`⚠️ ${name} not set, skipping related seed data`);
-  }
-
+  if (!value) throw new Error(`${name} environment variable is required for seeding`);
   return value;
 }
 
@@ -36,25 +31,24 @@ async function main() {
   const consumerEmail = requireEnv('CONSUMER_EMAIL');
   const consumerPassword = requireEnv('CONSUMER_PASSWORD');
 
-  // Create Admin User
-  let admin = await prisma.user.findUnique({
+  // Keep this account an administrator even when it already exists. This makes
+  // the seed safe to run on each production deployment.
+  const admin = await prisma.user.upsert({
     where: { email: adminEmail },
+    update: {
+      password: await bcrypt.hash(adminPassword, 10),
+      name: 'Admin',
+      role: 'ADMIN',
+    },
+    create: {
+      email: adminEmail,
+      password: await bcrypt.hash(adminPassword, 10),
+      name: 'Admin',
+      role: 'ADMIN',
+    },
   });
+  console.log('Admin account ensured');
 
-  if (!admin) {
-    admin = await prisma.user.create({
-      data: {
-        email: adminEmail,
-        password: await bcrypt.hash(adminPassword, 10),
-        name: 'Admin',
-        role: 'ADMIN',
-      },
-    });
-
-    console.log('✅ Admin created');
-  }
-
-  // Create Consumer User
   let consumer = await prisma.user.findUnique({
     where: { email: consumerEmail },
   });
@@ -63,24 +57,14 @@ async function main() {
     consumer = await prisma.user.create({
       data: {
         email: consumerEmail,
-        password: await bcrypt.hash(
-          consumerPassword,
-          10
-        ),
+        password: await bcrypt.hash(consumerPassword, 10),
         name: 'Consumer',
       },
     });
-
   }
 
-  // Create Sample API
   let weatherApi = await prisma.api.findUnique({
-    where: {
-      slug_method: {
-        slug: 'weather',
-        method: 'POST',
-      },
-    },
+    where: { slug_method: { slug: 'weather', method: 'POST' } },
   });
 
   if (!weatherApi) {
@@ -89,8 +73,7 @@ async function main() {
         slug: 'weather',
         title: 'Weather API',
         description: 'Sample weather data API',
-        baseUrl:
-          'https://api.example.com/weather',
+        baseUrl: 'https://api.example.com/weather',
         method: 'POST',
         category: 'data',
         pricePerCall: 0.01,
@@ -101,33 +84,21 @@ async function main() {
     });
   }
 
-  // Check Existing Subscription
-  const existingSub =
-    await prisma.subscription.findUnique({
-      where: {
-        userId_apiId: {
-          userId: consumer.id,
-          apiId: weatherApi.id,
-        },
+  const existingSub = await prisma.subscription.findUnique({
+    where: { userId_apiId: { userId: consumer.id, apiId: weatherApi.id } },
+  });
+
+  if (!existingSub) {
+    const purchase = await prisma.purchase.create({
+      data: {
+        userId: consumer.id,
+        apiId: weatherApi.id,
+        amount: 0,
+        quota: weatherApi.defaultQuota,
       },
     });
 
-  if (!existingSub) {
-    // Create Purchase
-    const purchase =
-      await prisma.purchase.create({
-        data: {
-          userId: consumer.id,
-          apiId: weatherApi.id,
-          amount: 0,
-          quota: weatherApi.defaultQuota,
-        },
-      });
-
-    // Generate API Key
     const apiKey = generateApiKey();
-
-    // Create Subscription
     await prisma.subscription.create({
       data: {
         userId: consumer.id,
@@ -144,7 +115,7 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error('❌ Seed failed:', err);
+    console.error('Seed failed:', err);
     process.exit(1);
   })
   .finally(async () => {

@@ -8,6 +8,11 @@
   [build.environment]
     NPM_FLAGS = "--include=dev"
 
+# Production deploys keep the schema current and ensure the configured admin
+# and demo consumer accounts exist. Preview deploys only build the application.
+[context.production]
+  command = "npm run db:migrate:deploy && npm --workspace backend run db:seed && npm run build"
+
 [functions]
   directory = "netlify/functions"
   included_files = [
