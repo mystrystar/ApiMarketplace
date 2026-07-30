@@ -1,6 +1,11 @@
 [build]
   command = "npm run build"
 
+  # Next.js and Prisma are build-time devDependencies. Keep them available even
+  # when NODE_ENV=production is configured for the deployed function runtime.
+  [build.environment]
+    NPM_FLAGS = "--include=dev"
+
 [functions]
   directory = "netlify/functions"
   included_files = [
