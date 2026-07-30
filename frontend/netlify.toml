@@ -1,5 +1,7 @@
 [build]
+  # Netlify runs this from the repository root, where the npm workspaces live.
   command = "npm run build"
+  publish = "frontend/.next"
 
   # Next.js and Prisma are build-time devDependencies. Keep them available even
   # when NODE_ENV=production is configured for the deployed function runtime.

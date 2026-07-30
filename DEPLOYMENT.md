@@ -109,7 +109,7 @@ For every future schema change: run `npm run db:migrate` locally to create a mig
 2. In [Netlify](https://app.netlify.com), choose **Add new project** → **Import an existing project** → GitHub, then select this repository.
 3. Leave the repository base directory empty. Netlify uses the root `netlify.toml`.
 4. Confirm the build command is `npm run build`. Do not set a publish directory; Netlify detects the Next.js application.
-5. Before deploying, open **Project configuration** → **Environment variables** and add these production variables:
+5. Keep **Base directory** empty (repository root) and **Package directory** set to `frontend`. The Netlify configuration file is intentionally at `frontend/netlify.toml` for this monorepo layout. Before deploying, open **Project configuration** → **Environment variables** and add these production variables:
 
 ```env
 DATABASE_URL=your-Neon-pooled-connection-string
@@ -140,6 +140,6 @@ curl.exe -X POST "https://YOUR-SITE.netlify.app/v1/weather" -H "x-api-key: YOUR_
 
 - **Netlify build fails while generating Prisma Client:** confirm the root build command remains `npm run build` and the project is deployed from the repository root.
 - **Function returns database errors:** re-copy the Neon pooled connection string to Netlify's `DATABASE_URL`, including `sslmode=require`, then redeploy.
-- **`/api/health` returns 404:** confirm `netlify.toml` is at the repository root and has been committed.
+- **`/api/health` returns 404:** confirm `frontend/netlify.toml` has been committed and the Netlify package directory is `frontend`.
 - **Local frontend cannot reach the API:** confirm `frontend/.env.local` points to `http://localhost:3000/api`, then restart the Next.js dev server.
 - **A migration fails:** do not delete tables or rerun a development migration against production. Check the migration status first with `npm exec --workspace backend prisma migrate status`.
