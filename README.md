@@ -174,7 +174,7 @@ CONSUMER_PASSWORD=a-strong-demo-password
 
 5. Deploy the `main` branch.
 
-Production deploys automatically apply Prisma migrations and seed the database. The `ADMIN_EMAIL` account is created or promoted to the `ADMIN` role on every production deploy. Never commit real passwords, database URLs, JWT secrets, or API keys.
+Production deploys generate the Linux Prisma Client, apply Prisma migrations, and seed the database. The `ADMIN_EMAIL` account is created or promoted to the `ADMIN` role on every production deploy. Never commit real passwords, database URLs, JWT secrets, or API keys.
 
 After deployment, verify the API:
 
