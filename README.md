@@ -19,7 +19,7 @@ https://www.loom.com/share/300ecca158cc4bc8bfebf70e5f90fea0
 
 ### Database & Auth
 
-* SQLite
+* PostgreSQL
 * Prisma ORM
 * JWT Authentication
 * bcrypt password hashing
@@ -89,6 +89,8 @@ npm run db:seed
 npm run dev
 ```
 
+For a complete local-development and free Netlify deployment guide, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ### Frontend Setup
 
 ```powershell
@@ -133,7 +135,7 @@ Health:   http://localhost:3000/api/health
 
 ```env
 PORT=3000
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DBNAME?sslmode=require"
 JWT_SECRET=change-this-to-a-long-random-string
 JWT_EXPIRES_IN=7d
 
