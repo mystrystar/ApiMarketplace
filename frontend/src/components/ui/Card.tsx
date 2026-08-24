@@ -10,9 +10,9 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={`console-panel p-5 ${className}`}>
+    <div className={`console-panel rounded-2xl p-5 ${className}`}>
       {title && (
-        <h3 className="mb-4 border-b border-[var(--border)] pb-2 text-[11px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
+        <h3 className="mb-4 flex items-center justify-between border-b border-white/10 pb-3 text-[12px] font-semibold text-slate-200">
           {title}
         </h3>
       )}

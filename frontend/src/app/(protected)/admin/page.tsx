@@ -6,7 +6,6 @@ import { ADMIN_LABELS, API_PATHS, ROUTES } from "@/constants";
 import { apiRequest } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import type { Analytics } from "@/types";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { AnalyticsCards } from "@/components/admin/AnalyticsCards";
 
 export default function AdminPage() {
@@ -74,19 +73,36 @@ export default function AdminPage() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title={ADMIN_LABELS.title}
-        action={
-          <button
-            type="button"
-            className="rounded-[var(--radius-sm)] bg-[linear-gradient(135deg,var(--accent),var(--purple))] px-3 py-2 text-sm font-medium text-white"
-            onClick={() => router.push(ROUTES.adminApis)}
-          >
-            Add API
-          </button>
-        }
-      />
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d1834]/80 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.3)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-cyan-200/80">Admin Portal</p>
+            <h1 className="mt-1 text-2xl font-bold text-white md:text-3xl">
+              {ADMIN_LABELS.title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              Review API supply, monitor demand, track consumers, and keep marketplace usage healthy.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-4 py-3 text-sm font-bold text-cyan-100"
+              onClick={() => router.push(ROUTES.adminUsers)}
+            >
+              View Users
+            </button>
+            <button
+              type="button"
+              className="rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.25)]"
+              onClick={() => router.push(ROUTES.adminApis)}
+            >
+              Add API
+            </button>
+          </div>
+        </div>
+      </div>
       <AnalyticsCards data={analytics} />
     </div>
   );

@@ -2,16 +2,16 @@
 @import "tailwindcss";
 
 :root {
-  --bg-page: #0b0f1c;
-  --bg-surface: #111827;
-  --bg-card: #16202e;
-  --bg-elevated: #1c2a3a;
-  --border: rgba(79, 142, 255, 0.12);
-  --border-h: rgba(79, 142, 255, 0.28);
-  --accent: #4f8eff;
+  --bg-page: #02071a;
+  --bg-surface: rgba(6, 15, 35, 0.92);
+  --bg-card: rgba(13, 24, 52, 0.84);
+  --bg-elevated: rgba(18, 32, 67, 0.82);
+  --border: rgba(148, 163, 184, 0.14);
+  --border-h: rgba(34, 211, 238, 0.34);
+  --accent: #38bdf8;
   --accent-dim: rgba(79, 142, 255, 0.12);
-  --purple: #7c3aed;
-  --green: #10d9a0;
+  --purple: #8b5cf6;
+  --green: #14f1b6;
   --green-dim: rgba(16, 217, 160, 0.12);
   --amber: #f59e0b;
   --amber-dim: rgba(245, 158, 11, 0.12);
@@ -47,7 +47,10 @@
 }
 
 body {
-  background: var(--bg-page);
+  background:
+    radial-gradient(circle at 16% 8%, rgba(37, 99, 235, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 2%, rgba(124, 58, 237, 0.22), transparent 28%),
+    linear-gradient(135deg, #02071a 0%, #06152d 52%, #020617 100%);
   color: var(--text);
   font-family: var(--font-ui);
   letter-spacing: 0;
@@ -63,14 +66,19 @@ textarea {
 }
 
 .console-panel {
-  background: var(--bg-card);
+  background:
+    linear-gradient(145deg, rgba(17, 34, 72, 0.88), rgba(7, 17, 38, 0.9)),
+    var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .console-panel:hover {
   border-color: var(--border-h);
+  box-shadow: 0 26px 80px rgba(37, 99, 235, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .mono {

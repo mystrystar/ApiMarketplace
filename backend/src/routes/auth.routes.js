@@ -15,6 +15,7 @@ const router = Router();
 
 router.post('/register', authController.register);
 router.post('/login', loginLimiter, authController.login);
+router.post('/demo-login', loginLimiter, authController.demoLogin);
 router.get('/me', authenticate, authController.me);
 
 module.exports = router;

@@ -3,6 +3,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 export const API_PATHS = {
   health: "/health",
   login: "/auth/login",
+  demoLogin: "/auth/demo-login",
   register: "/auth/register",
   me: "/auth/me",
   apis: "/apis",

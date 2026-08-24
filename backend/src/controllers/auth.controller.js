@@ -86,6 +86,61 @@ async function login(req, res, next) {
   }
 }
 
+async function demoLogin(req, res, next) {
+  try {
+    const { role } = req.body;
+    const normalizedRole = String(role || '').toUpperCase();
+
+    const email =
+      normalizedRole === 'ADMIN'
+        ? process.env.ADMIN_EMAIL
+        : normalizedRole === 'USER' || normalizedRole === 'CONSUMER'
+          ? process.env.CONSUMER_EMAIL
+          : null;
+
+    if (!email) {
+      if (normalizedRole === 'ADMIN' || normalizedRole === 'USER' || normalizedRole === 'CONSUMER') {
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'DEMO_LOGIN_NOT_CONFIGURED',
+            message:
+              'Demo login is not configured in the backend environment. Set ADMIN_EMAIL and CONSUMER_EMAIL in your local backend .env or Netlify env vars.',
+          },
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_DEMO_ROLE',
+          message: 'Demo role must be ADMIN or USER',
+        },
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: ERRORS.INVALID_CREDENTIALS,
+      });
+    }
+
+    const token = signToken({ userId: user.id, role: user.role });
+
+    res.json({
+      success: true,
+      data: {
+        user: publicUser(user),
+        token,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function me(req, res) {
   res.json({
     success: true,
@@ -95,4 +150,4 @@ async function me(req, res) {
   });
 }
 
-module.exports = { register, login, me };
+module.exports = { register, login, demoLogin, me };

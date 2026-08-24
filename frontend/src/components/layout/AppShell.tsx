@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) router.replace(ROUTES.login);
+    if (!loading && !user) router.replace(ROUTES.home);
   }, [loading, user, router]);
 
   if (loading) {
@@ -26,9 +26,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-primary)]">
+    <div className="relative flex min-h-screen overflow-hidden bg-[var(--bg-primary)]">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(37,99,235,0.2),transparent_28%),radial-gradient(circle_at_82%_0%,rgba(124,58,237,0.18),transparent_28%),linear-gradient(135deg,#02071a_0%,#06152d_55%,#020617_100%)]" />
+      <div className="pointer-events-none fixed right-[-180px] top-[-80px] h-[420px] w-[600px] rounded-full border border-fuchsia-400/10 bg-fuchsia-500/10 blur-2xl" />
       <Sidebar />
-      <main className="flex-1 overflow-auto p-4 pb-24 md:p-8">{children}</main>
+      <main className="relative z-10 flex-1 overflow-auto p-4 pb-24 md:p-8">{children}</main>
       <OnboardingModal user={user} />
     </div>
   );

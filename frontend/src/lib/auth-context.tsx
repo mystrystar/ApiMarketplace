@@ -18,6 +18,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  demoLogin: (role: "ADMIN" | "USER") => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -68,7 +69,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearOnboardingForRole(data.user.role);
       setAuth(data.token, data.user);
       setUser(data.user);
-      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
+      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard);
+    },
+    [router],
+  );
+
+  const demoLogin = useCallback(
+    async (role: "ADMIN" | "USER") => {
+      const data = await apiRequest<{ user: User; token: string }>(
+        API_PATHS.demoLogin,
+        { method: "POST", body: { role }, auth: false },
+      );
+      clearOnboardingForRole(data.user.role);
+      setAuth(data.token, data.user);
+      setUser(data.user);
+      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard);
     },
     [router],
   );
@@ -82,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearOnboardingForRole(data.user.role);
       setAuth(data.token, data.user);
       setUser(data.user);
-      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.marketplace);
+      router.push(data.user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard);
     },
     [router],
   );
@@ -90,12 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     clearAuth();
     setUser(null);
-    router.push(ROUTES.login);
+    router.push(ROUTES.home);
   }, [router]);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser }),
-    [user, loading, login, register, logout, refreshUser],
+    () => ({ user, loading, login, demoLogin, register, logout, refreshUser }),
+    [user, loading, login, demoLogin, register, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

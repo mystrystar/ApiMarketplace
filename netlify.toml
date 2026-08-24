@@ -1,0 +1,34 @@
+[build]
+  # Netlify runs this from the repository root, where the npm workspaces live.
+  command = "npm run build"
+  publish = "frontend/.next"
+
+  # Next.js and Prisma are build-time devDependencies. Keep them available even
+  # when NODE_ENV=production is configured for the deployed function runtime.
+  [build.environment]
+    NPM_FLAGS = "--include=dev"
+
+# Production deploys keep the schema current and ensure the configured admin
+# and demo consumer accounts exist. Preview deploys only build the application.
+[context.production]
+  command = "npm run build:backend && npm run db:migrate:deploy && npm --workspace backend run db:seed && npm run build:frontend"
+
+[functions]
+  directory = "netlify/functions"
+  included_files = [
+    "backend/prisma/**",
+    "node_modules/.prisma/client/**",
+    "backend/node_modules/.prisma/client/**"
+  ]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/v1/*"
+  to = "/.netlify/functions/api/v1/:splat"
+  status = 200
+  force = true

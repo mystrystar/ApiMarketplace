@@ -7,6 +7,13 @@ const { normalizeJsonResponses } = require('./utils/serialize');
 
 const app = express();
 
+// Login requests pass through a proxy in both local frontend development
+// (Next.js rewrites /api/* to the Express server) and Netlify production
+// (redirects /api/* to a serverless function). express-rate-limit validates
+// X-Forwarded-For and can throw a 500 unless Express is told to trust that
+// single upstream proxy hop.
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json());
 app.use(normalizeJsonResponses);
