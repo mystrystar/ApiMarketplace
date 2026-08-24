@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { ApiError } from "@/lib/api-client";
+import type { ElementType } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { ROUTES } from "@/constants";
 
@@ -298,18 +299,23 @@ export default function HomePage() {
         <DashboardPreview />
 
         <section className="mx-auto mt-12 grid max-w-6xl gap-4 text-sm text-slate-300 md:grid-cols-4">
-          {[
-            [Sparkles, "Secure & Reliable", "Enterprise-grade key handling"],
-            [TrendingUp, "Scalable Platform", "Built to grow with your API catalog"],
-            [ShieldCheck, "Trusted APIs", "Quality APIs reviewed by admins"],
-            [CheckCircle2, "Developer First", "Docs, keys, logs, and usage in one place"],
-          ].map(([Icon, title, copy]) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-lg text-cyan-300"><Icon className="h-5 w-5" /></p>
-              <p className="mt-2 font-semibold text-white">{title}</p>
-              <p className="mt-1 text-xs text-slate-400">{copy}</p>
-            </div>
-          ))}
+          {
+            // typed feature tuples so TS understands the Icon component type
+            (
+              [
+              [Sparkles, "Secure & Reliable", "Enterprise-grade key handling"],
+              [TrendingUp, "Scalable Platform", "Built to grow with your API catalog"],
+              [ShieldCheck, "Trusted APIs", "Quality APIs reviewed by admins"],
+              [CheckCircle2, "Developer First", "Docs, keys, logs, and usage in one place"],
+              ] as [ElementType, string, string][]
+            ).map(([Icon, title, copy]) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-lg text-cyan-300"><Icon className="h-5 w-5" /></p>
+                <p className="mt-2 font-semibold text-white">{title}</p>
+                <p className="mt-1 text-xs text-slate-400">{copy}</p>
+              </div>
+            ))
+          }
         </section>
 
         <footer className="py-10 text-center text-xs text-slate-500">
