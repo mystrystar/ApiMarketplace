@@ -1,3 +1,11 @@
+import {
+  ArrowUpRight,
+  CircleUserRound,
+  Coins,
+  FileCode2,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { ADMIN_LABELS } from "@/constants";
 import type { Analytics } from "@/types";
 import { Card } from "@/components/ui/Card";
@@ -13,7 +21,7 @@ function AdminMetric({
 }: {
   label: string;
   value: string | number;
-  icon: string;
+  icon: React.ReactNode;
   delta: string;
   tone: string;
 }) {
@@ -24,7 +32,7 @@ function AdminMetric({
           <p className="text-xs text-slate-400">{label}</p>
           <p className="mt-2 font-mono text-2xl font-bold text-white">{value}</p>
         </div>
-        <span className={`grid h-12 w-12 place-items-center rounded-2xl text-xl ${tone}`}>
+        <span className={`grid h-12 w-12 place-items-center rounded-2xl ${tone}`}>
           {icon}
         </span>
       </div>
@@ -44,28 +52,28 @@ export function AnalyticsCards({ data }: { data: Analytics }) {
     {
       label: ADMIN_LABELS.totalUsers,
       value: data.totalUsers.toLocaleString(),
-      icon: "◎",
+      icon: <Users className="h-5 w-5" />,
       delta: "Users under management",
       tone: "bg-cyan-400/15 text-cyan-200",
     },
     {
       label: ADMIN_LABELS.totalApis,
       value: data.totalApis.toLocaleString(),
-      icon: "</>",
+      icon: <FileCode2 className="h-5 w-5" />,
       delta: "Published and pending catalog",
       tone: "bg-violet-500/20 text-violet-200",
     },
     {
       label: ADMIN_LABELS.revenue,
       value: `₹${Number(data.revenue || 0).toFixed(2)}`,
-      icon: "₹",
+      icon: <Coins className="h-5 w-5" />,
       delta: "Marketplace gross revenue",
       tone: "bg-emerald-500/20 text-emerald-200",
     },
     {
       label: ADMIN_LABELS.callsToday,
       value: data.totalCallsToday.toLocaleString(),
-      icon: "24",
+      icon: <TrendingUp className="h-5 w-5" />,
       delta: "Calls processed today",
       tone: "bg-amber-500/20 text-amber-200",
     },

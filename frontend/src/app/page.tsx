@@ -2,6 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  CircleUserRound,
+  Crown,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { ROUTES } from "@/constants";
@@ -59,7 +69,7 @@ function SignInCard({
     <article className="group relative overflow-hidden rounded-3xl border border-white/10 bg-[#101a38]/70 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-cyan-300/30">
       <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
       <div className={`mb-5 grid h-16 w-16 place-items-center rounded-2xl border ${item.ring}`}>
-        <span className="text-3xl">{kind === "admin" ? "♙" : "◉"}</span>
+        {kind === "admin" ? <Crown className="h-8 w-8" /> : <CircleUserRound className="h-8 w-8" />}
       </div>
       <h2 className="text-xl font-semibold text-white">{item.title}</h2>
       <p className="mt-2 min-h-10 text-sm leading-6 text-slate-300">{item.subtitle}</p>
@@ -100,8 +110,8 @@ function SignInCard({
       <ul className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
         {item.bullets.map((bullet) => (
           <li key={bullet} className="flex items-center gap-3">
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-400/10 text-xs text-cyan-300">
-              ✓
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-400/10 text-cyan-300">
+              <Check className="h-3.5 w-3.5" />
             </span>
             {bullet}
           </li>
@@ -238,9 +248,10 @@ export default function HomePage() {
           {user && (
             <Link
               href={user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard}
-              className="mt-6 inline-flex rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-cyan-100"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-cyan-100"
             >
-              Continue to your {user.role === "ADMIN" ? "admin" : "consumer"} portal →
+              <span>Continue to your {user.role === "ADMIN" ? "admin" : "consumer"} portal</span>
+              <ArrowRight className="h-4 w-4" />
             </Link>
           )}
         </section>
@@ -249,8 +260,8 @@ export default function HomePage() {
           <SignInCard kind="admin" onDemoLogin={handleDemoLogin} loadingRole={loadingRole} />
           <SignInCard kind="consumer" onDemoLogin={handleDemoLogin} loadingRole={loadingRole} />
           <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d2437]/70 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-teal-300/30 bg-teal-300/10 text-3xl text-teal-200">
-              +
+            <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-teal-300/30 bg-teal-300/10 text-teal-200">
+              <ShieldCheck className="h-8 w-8" />
             </div>
             <h2 className="text-xl font-semibold text-white">New User?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -259,8 +270,8 @@ export default function HomePage() {
             <ul className="mt-7 space-y-4 text-sm text-slate-300">
               {["Browse and subscribe to APIs", "Manage your applications", "View usage and analytics"].map((item) => (
                 <li key={item} className="flex items-center gap-3">
-                  <span className="grid h-5 w-5 place-items-center rounded-full border border-teal-300/40 text-xs text-teal-200">
-                    ✓
+                  <span className="grid h-5 w-5 place-items-center rounded-full border border-teal-300/40 text-teal-200">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
                   </span>
                   {item}
                 </li>
@@ -288,13 +299,13 @@ export default function HomePage() {
 
         <section className="mx-auto mt-12 grid max-w-6xl gap-4 text-sm text-slate-300 md:grid-cols-4">
           {[
-            ["◇", "Secure & Reliable", "Enterprise-grade key handling"],
-            ["▴", "Scalable Platform", "Built to grow with your API catalog"],
-            ["✦", "Trusted APIs", "Quality APIs reviewed by admins"],
-            ["</>", "Developer First", "Docs, keys, logs, and usage in one place"],
-          ].map(([icon, title, copy]) => (
+            [Sparkles, "Secure & Reliable", "Enterprise-grade key handling"],
+            [TrendingUp, "Scalable Platform", "Built to grow with your API catalog"],
+            [ShieldCheck, "Trusted APIs", "Quality APIs reviewed by admins"],
+            [CheckCircle2, "Developer First", "Docs, keys, logs, and usage in one place"],
+          ].map(([Icon, title, copy]) => (
             <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-lg text-cyan-300">{icon}</p>
+              <p className="text-lg text-cyan-300"><Icon className="h-5 w-5" /></p>
               <p className="mt-2 font-semibold text-white">{title}</p>
               <p className="mt-1 text-xs text-slate-400">{copy}</p>
             </div>
