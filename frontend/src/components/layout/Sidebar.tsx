@@ -31,8 +31,8 @@ export function Sidebar() {
   const homeHref = user?.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard;
 
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-[#061126]/95 p-2 shadow-[0_-16px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:sticky md:inset-y-0 md:h-screen md:w-[255px] md:shrink-0 md:flex md:flex-col md:justify-between md:border-r md:border-t-0 md:px-4 md:py-5">
-      <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
+    <aside className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-[#061126]/95 p-2 shadow-[0_-16px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:sticky md:top-0 md:h-screen md:w-[255px] md:shrink-0 md:flex md:flex-col md:border-r md:border-t-0 md:px-4 md:py-5">
+      <div className="md:flex md:flex-col md:h-full">
         <div className="mb-6 hidden items-center gap-3 md:flex">
           <Link
             href={homeHref}
@@ -48,7 +48,8 @@ export function Sidebar() {
           </div>
         </div>
 
-        <nav className="grid flex-1 grid-cols-4 gap-1 md:flex md:flex-col md:gap-2">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <nav className="grid grid-cols-4 gap-1 md:flex md:flex-col md:gap-2">
           {links.map((item) => {
             const active =
               pathname === item.href ||
@@ -77,14 +78,17 @@ export function Sidebar() {
               </Link>
             );
           })}
-        </nav>
+          </nav>
+        </div>
+      </div>
 
-        <div className="mt-8 hidden rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-4 md:block">
+      <div className="hidden md:flex md:flex-col md:gap-3 md:shrink-0">
+        <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-4">
           <div className="mb-3 flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-500/20 text-blue-200">
               <ChartColumnIncreasing className="h-4 w-4" />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold text-white">Need admin access?</p>
               <p className="text-[10px] leading-4 text-slate-400">For account issues or API queries, contact support.</p>
             </div>
@@ -96,19 +100,18 @@ export function Sidebar() {
             Contact Team
           </a>
         </div>
-      </div>
 
-      <div className="mt-auto hidden md:flex md:flex-col md:gap-3">
         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-sm font-bold text-white">
             {(user?.email || "?").charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs text-white">{user?.email}</p>
+            <p className="truncate text-xs text-white max-w-[12rem]">{user?.email}</p>
             <p className="text-[10px] text-slate-400">{user?.role === "ADMIN" ? "Administrator" : "Consumer"}</p>
           </div>
         </div>
-        <Button variant="danger" onClick={logout} className="w-full">
+
+        <Button variant="danger" onClick={logout} className="w-full shrink-0">
           Logout
         </Button>
       </div>
