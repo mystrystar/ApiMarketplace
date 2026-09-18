@@ -8,6 +8,7 @@ import {
   ChartColumnIncreasing,
   FileText,
   House,
+  LogOut,
   ShoppingBag,
   Users,
 } from "lucide-react";
@@ -31,7 +32,7 @@ export function Sidebar() {
   const homeHref = user?.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard;
 
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-[#061126]/95 p-2 shadow-[0_-16px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:sticky md:top-0 md:h-screen md:w-[255px] md:shrink-0 md:flex md:flex-col md:border-r md:border-t-0 md:px-4 md:py-5">
+    <aside className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-[#061126]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:sticky md:top-0 md:h-screen md:w-[255px] md:shrink-0 md:flex md:flex-col md:border-r md:border-t-0 md:px-4 md:py-5">
       <div className="md:flex md:flex-col md:h-full">
         <div className="mb-6 hidden items-center gap-3 md:flex">
           <Link
@@ -48,8 +49,8 @@ export function Sidebar() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <nav className="grid grid-cols-4 gap-1 md:flex md:flex-col md:gap-2">
+        <div className="flex min-h-0 flex-1 items-stretch gap-1 overflow-x-auto md:flex-col md:gap-0 md:overflow-y-auto">
+          <nav aria-label="Main navigation" className="flex flex-1 items-stretch gap-1 md:flex-col md:gap-2">
           {links.map((item) => {
             const active =
               pathname === item.href ||
@@ -58,7 +59,8 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group flex items-center justify-center gap-2 rounded-xl px-2 py-[10px] text-center text-xs font-medium transition md:justify-start md:px-3 md:text-left md:text-[13px] ${
+                aria-current={active ? "page" : undefined}
+                className={`group flex min-w-[3.9rem] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center text-[10px] font-medium transition md:min-w-0 md:flex-row md:justify-start md:gap-2 md:px-3 md:py-[10px] md:text-left md:text-[13px] ${
                   active
                     ? "border border-cyan-300/20 bg-gradient-to-r from-blue-500/35 to-violet-500/30 text-cyan-100 shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
                     : "border border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-slate-100"
@@ -74,11 +76,23 @@ export function Sidebar() {
                     return <Icon className="h-3.5 w-3.5" />;
                   })()}
                 </span>
-                <span className="hidden md:inline">{item.label}</span>
+                <span className="leading-tight">{item.label}</span>
               </Link>
             );
           })}
           </nav>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="flex min-w-[3.9rem] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-rose-400/15 bg-rose-500/[0.08] px-2 py-2 text-center text-[10px] font-medium leading-tight text-rose-200 transition hover:bg-rose-500/[0.16] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 md:hidden"
+            aria-label="Log out"
+          >
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-rose-500/10 text-rose-300">
+              <LogOut className="h-3.5 w-3.5" />
+            </span>
+            <span>Logout</span>
+          </button>
         </div>
       </div>
 
