@@ -1,327 +1,73 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  CircleUserRound,
-  Crown,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
+import { FormEvent, useState } from "react";
+import { Check, ChevronRight, Menu, X } from "lucide-react";
 import { ApiError } from "@/lib/api-client";
-import type { ElementType } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { ROUTES } from "@/constants";
 
-const DEMO = {
-  admin: {
-    email: "admin@marketplace.local",
-    password: "admin123",
-    title: "Admin Sign in",
-    subtitle: "Secure access for platform administrators",
-    button: "Sign in as Admin",
-    accent: "from-[#2563eb] to-[#7c3aed]",
-    ring: "border-[#2563eb]/35 bg-[#2563eb]/10 text-[#60a5fa]",
-    bullets: ["Approve and publish APIs", "Manage consumers and providers", "Track revenue, usage, and logs"],
-  },
-  consumer: {
-    email: "consumer@marketplace.local",
-    password: "consumer123",
-    title: "Consumer Sign in",
-    subtitle: "Access and manage your APIs, subscriptions & applications",
-    button: "Sign in as Consumer",
-    accent: "from-[#a855f7] to-[#2563eb]",
-    ring: "border-[#8b5cf6]/35 bg-[#7c3aed]/10 text-[#c084fc]",
-    bullets: ["Browse and subscribe to APIs", "Copy keys and refill quota", "Monitor traffic and response health"],
-  },
+type Role = "user" | "admin";
+
+const CREDENTIALS = {
+  user: { email: "consumer@marketplace.local", password: "consumer123", title: "Sign in", button: "Sign in" },
+  admin: { email: "admin@marketplace.local", password: "admin123", title: "Admin sign in", button: "Sign in as admin" },
 } as const;
 
-function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative grid h-12 w-12 place-items-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 shadow-[0_0_30px_rgba(34,211,238,0.18)]">
-        <span className="text-2xl font-black text-cyan-300">A</span>
-        <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-[#8b5cf6] shadow-[0_0_18px_#8b5cf6]" />
-      </div>
-      <div>
-        <p className="text-lg font-bold text-white">API Marketplace</p>
-        <p className="text-xs text-[#7dd3fc]">Developer Gateway</p>
-      </div>
-    </div>
-  );
+const apis = [
+  ["Geocode", "Turn an address into coordinates", "GeoLine", "GET", "$0.40", "92 ms", "99.98%"],
+  ["Address verify", "Check and standardize postal addresses", "PostalGrid", "POST", "$1.20", "140 ms", "99.95%"],
+  ["Currency rates", "Live and historical exchange rates", "LedgerFX", "GET", "$0.25", "48 ms", "99.99%"],
+  ["Invoice parser", "Extract line items from PDF invoices", "Ledgerly", "POST", "$6.00", "820 ms", "99.90%"],
+  ["Weather forecast", "Daily and hourly forecasts by city", "Nimbus Data", "GET", "$0.30", "76 ms", "99.97%"],
+  ["Text sentiment", "Score reviews and messages as positive or negative", "Lexis Labs", "POST", "$0.90", "210 ms", "99.92%"],
+] as const;
+
+function Brand() {
+  return <Link href={ROUTES.home} className="flex items-center gap-2 font-bold text-white"><span className="grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br from-[#4c84ff] to-[#8b5cf6] text-sm">↕</span>API Marketplace</Link>;
 }
 
-function SignInCard({
-  kind,
-  onDemoLogin,
-  loadingRole,
-}: {
-  kind: keyof typeof DEMO;
-  onDemoLogin: (role: keyof typeof DEMO) => void;
-  loadingRole: keyof typeof DEMO | null;
-}) {
-  const item = DEMO[kind];
-
-  return (
-    <article className="group relative overflow-hidden rounded-3xl border border-white/10 bg-[#101a38]/70 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-cyan-300/30">
-      <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
-      <div className={`mb-5 grid h-16 w-16 place-items-center rounded-2xl border ${item.ring}`}>
-        {kind === "admin" ? <Crown className="h-8 w-8" /> : <CircleUserRound className="h-8 w-8" />}
-      </div>
-      <h2 className="text-xl font-semibold text-white">{item.title}</h2>
-      <p className="mt-2 min-h-10 text-sm leading-6 text-slate-300">{item.subtitle}</p>
-
-      <div className="mt-6 space-y-3">
-        <label className="block">
-          <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            Email
-          </span>
-          <input
-            readOnly
-            value={item.email}
-            className="w-full rounded-xl border border-white/10 bg-[#071126]/70 px-4 py-3 text-sm text-slate-200 shadow-inner"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            Password
-          </span>
-          <input
-            readOnly
-            type="password"
-            value={item.password}
-            className="w-full rounded-xl border border-white/10 bg-[#071126]/70 px-4 py-3 text-sm text-slate-200 shadow-inner"
-          />
-        </label>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onDemoLogin(kind)}
-        disabled={Boolean(loadingRole)}
-        className={`mt-5 w-full rounded-xl bg-gradient-to-r ${item.accent} px-4 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.25)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60`}
-      >
-        {loadingRole === kind ? "Signing in..." : item.button}
-      </button>
-
-      <ul className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-        {item.bullets.map((bullet) => (
-          <li key={bullet} className="flex items-center gap-3">
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-400/10 text-cyan-300">
-              <Check className="h-3.5 w-3.5" />
-            </span>
-            {bullet}
-          </li>
-        ))}
-      </ul>
-    </article>
-  );
-}
-
-function DashboardPreview() {
-  return (
-    <div className="relative mx-auto mt-16 max-w-6xl rounded-[2rem] border border-white/10 bg-[#07142b]/80 p-4 shadow-[0_30px_120px_rgba(37,99,235,0.18)] backdrop-blur-xl">
-      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.3fr]">
-        <div className="rounded-[1.5rem] border border-white/10 bg-[#0d1834] p-5">
-          <p className="text-sm font-semibold text-cyan-300">How it works</p>
-          <h3 className="mt-3 text-2xl font-bold text-white">From discovery to metered calls in minutes.</h3>
-          <div className="mt-6 space-y-4">
-            {[
-              ["1", "Browse APIs", "Filter by category, price, method, or provider quality."],
-              ["2", "Subscribe & get a key", "Buy quota packs and copy the generated API key."],
-              ["3", "Track every request", "Watch quota, latency, status codes, and recent activity."],
-            ].map(([step, title, copy]) => (
-              <div key={step} className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-400/10 font-bold text-cyan-300">
-                  {step}
-                </span>
-                <div>
-                  <p className="font-semibold text-white">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-400">{copy}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[1.5rem] border border-white/10 bg-[#0d1834] p-5">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Consumer analytics mockup</p>
-              <h3 className="text-xl font-bold text-white">API Usage Overview</h3>
-            </div>
-            <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
-              Last 7 days
-            </span>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              ["12,540", "Total Calls", "↗ 18.6%"],
-              ["99.98%", "Success Rate", "↗ healthy"],
-              ["Pro", "Current Plan", "Manage"],
-            ].map(([value, label, delta]) => (
-              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="font-mono text-2xl font-bold text-white">{value}</p>
-                <p className="mt-1 text-xs text-slate-400">{label}</p>
-                <p className="mt-3 text-xs text-emerald-300">{delta}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 h-52 rounded-2xl border border-white/10 bg-[#081126] p-4">
-            <svg viewBox="0 0 680 180" className="h-full w-full overflow-visible">
-              <defs>
-                <linearGradient id="landingLine" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M0 150 C95 120 120 95 205 105 C285 115 300 38 392 54 C485 70 505 142 680 82 L680 180 L0 180 Z" fill="url(#landingLine)" />
-              <path d="M0 150 C95 120 120 95 205 105 C285 115 300 38 392 54 C485 70 505 142 680 82" fill="none" stroke="#a855f7" strokeWidth="4" strokeLinecap="round" />
-              {[0, 205, 392, 680].map((x, index) => (
-                <circle key={x} cx={x} cy={[150, 105, 54, 82][index]} r="5" fill="#22d3ee" />
-              ))}
-            </svg>
-          </div>
-        </div>
-      </div>
+function UsagePreview() {
+  return <div className="overflow-hidden rounded-xl border border-[#26345e] bg-[#0b1430] shadow-[0_20px_60px_rgba(0,0,0,.26)]">
+    <div className="grid grid-cols-3 divide-x divide-[#26345e] border-b border-[#26345e]">
+      {[["12,540", "Calls in 7 days"], ["99.98%", "Success rate"], ["Pro", "Current plan"]].map(([n, l]) => <div key={l} className="p-4"><p className="text-xl font-bold text-white">{n}</p><p className="text-[10px] text-slate-400">{l}</p></div>)}
     </div>
-  );
+    <div className="h-36 border-b border-[#26345e] px-4 pt-4"><svg viewBox="0 0 480 110" className="h-full w-full"><defs><linearGradient id="graph" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#8b5cf6" stopOpacity=".48"/><stop offset="1" stopColor="#8b5cf6" stopOpacity="0"/></linearGradient></defs><path d="M5 88 L75 78 L150 82 L230 40 L315 55 L390 25 L475 31 L475 110 L5 110Z" fill="url(#graph)"/><path d="M5 88 L75 78 L150 82 L230 40 L315 55 L390 25 L475 31" fill="none" stroke="#9563ff" strokeWidth="3"/><circle cx="230" cy="40" r="4" fill="#22d3ee"/><circle cx="475" cy="31" r="4" fill="#22d3ee"/></svg></div>
+    <div className="p-3 font-mono text-[9px] leading-6 text-slate-400"><b className="font-sans text-xs text-white">Recent requests</b><p>10:42:07&nbsp;&nbsp;GET /v1/geocode?q=Lisbon <span className="float-right text-emerald-400">200&nbsp; 88 ms</span></p><p>10:42:05&nbsp;&nbsp;GET /v1/rates?base=USD <span className="float-right text-emerald-400">200&nbsp; 51 ms</span></p><p>10:41:58&nbsp;&nbsp;POST /v1/sentiment <span className="float-right text-emerald-400">200&nbsp; 204 ms</span></p></div>
+  </div>;
 }
 
 export default function HomePage() {
-  const { demoLogin, user } = useAuth();
-  const [loadingRole, setLoadingRole] = useState<keyof typeof DEMO | null>(null);
+  const { login, user } = useAuth();
+  const [role, setRole] = useState<Role>("user");
+  const [email, setEmail] = useState<string>(CREDENTIALS.user.email);
+  const [password, setPassword] = useState<string>(CREDENTIALS.user.password);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  async function handleDemoLogin(role: keyof typeof DEMO) {
-    setLoadingRole(role);
-    setError("");
-    try {
-      await demoLogin(role === "admin" ? "ADMIN" : "USER");
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to sign in with the seeded demo account.",
-      );
-    } finally {
-      setLoadingRole(null);
-    }
-  }
+  function selectRole(next: Role) { setRole(next); setEmail(CREDENTIALS[next].email); setPassword(CREDENTIALS[next].password); setError(""); }
+  function openLogin(next: Role = "user") { selectRole(next); document.getElementById("signin")?.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setLoading(true); setError(""); try { await login(email, password); } catch (err) { setError(err instanceof ApiError ? err.message : "Unable to sign in. Please try again."); } finally { setLoading(false); } }
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-[#02071a] px-5 py-8 text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(37,99,235,0.28),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(124,58,237,0.32),transparent_28%),radial-gradient(circle_at_55%_90%,rgba(6,182,212,0.15),transparent_35%)]" />
-      <div className="pointer-events-none absolute right-[-140px] top-20 h-[420px] w-[620px] rounded-full border border-fuchsia-400/20 bg-[radial-gradient(circle,rgba(168,85,247,0.16),transparent_65%)] blur-sm" />
-      <div className="pointer-events-none absolute left-0 top-16 hidden h-[330px] w-[280px] opacity-40 md:block">
-        <div className="h-full w-full bg-[linear-gradient(135deg,transparent_0_42%,rgba(37,99,235,0.22)_42%_43%,transparent_43%_100%)]" />
-      </div>
+  return <main className="min-h-screen overflow-hidden bg-[#050b22] text-[#e7edff]">
+    <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_72%_13%,rgba(89,53,201,.19),transparent_20%),radial-gradient(circle_at_12%_75%,rgba(37,99,235,.12),transparent_24%)]" />
+    <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <header className="flex h-20 items-center justify-between"><Brand /><nav className="hidden items-center gap-7 text-xs text-slate-400 md:flex"><a href="#catalog" className="hover:text-white">Browse APIs</a><a href="#how-it-works" className="hover:text-white">How it works</a><button onClick={() => openLogin()} className="hover:text-white">Sign in</button><button onClick={() => openLogin()} className="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-[#041127] hover:bg-cyan-300">Get an API key</button></nav><button className="text-slate-300 md:hidden" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation">{menuOpen ? <X/> : <Menu/>}</button></header>
+      {menuOpen && <nav className="mb-4 grid rounded-xl border border-[#26345e] bg-[#0b1430] p-3 text-sm md:hidden"><a href="#catalog" onClick={() => setMenuOpen(false)} className="p-3">Browse APIs</a><a href="#how-it-works" onClick={() => setMenuOpen(false)} className="p-3">How it works</a><button onClick={() => { setMenuOpen(false); openLogin(); }} className="p-3 text-left">Sign in</button></nav>}
 
-      <div className="relative z-10 mx-auto max-w-7xl">
-        <header className="flex items-center justify-between gap-4">
-          <Logo />
-          <div className="text-right text-xs text-slate-300">
-            <p className="font-semibold text-white">Need help?</p>
-            <a href="mailto:support@marketplace.local" className="text-cyan-300">
-              Contact API Marketplace Team
-            </a>
-          </div>
-        </header>
+      <section className="grid min-h-[440px] items-center gap-12 py-12 md:grid-cols-[1fr_.95fr] md:py-20">
+        <div><h1 className="max-w-md text-5xl font-bold leading-[.98] tracking-tight text-[#f1f4ff] sm:text-6xl">Find an API.<br/>Get a key.<br/>Make the call today.</h1><p className="mt-5 max-w-md text-sm leading-6 text-slate-400">Browse APIs from vetted providers, buy a quota pack, and see every request you make: status, speed, and what&apos;s left in your quota.</p><div className="mt-6 flex flex-wrap gap-3"><a href="#catalog" className="rounded-lg bg-[#497cff] px-4 py-3 text-xs font-bold text-white">Browse APIs</a><Link href={ROUTES.signup} className="rounded-lg bg-cyan-400 px-4 py-3 text-xs font-bold text-[#041127]">Create a free account</Link></div><p className="mt-5 text-xs text-slate-500">Already have an account? <button onClick={() => openLogin()} className="font-semibold text-white underline">Sign in</button></p></div>
+        <div className="rounded-xl border border-[#26345e] bg-[#070d22] shadow-[0_18px_55px_rgba(21,8,78,.45)]"><div className="flex gap-1 border-b border-[#26345e] px-3 pt-2 text-[10px] text-slate-400"><span className="rounded-t bg-[#1d2b55] px-3 py-2 text-white">Geocode</span><span className="px-3 py-2">Currency rates</span><span className="px-3 py-2">Weather</span></div><div className="p-4 font-mono text-[10px] leading-5"><p className="text-amber-300">GET <span className="text-slate-200">/v1/geocode?q=Lisbon,Portugal</span></p><p className="text-slate-500">Host: <span className="text-[#9ab2ff]">api.marketplace.dev</span><br/>Authorization: Bearer <span className="text-[#9ab2ff]">mk_live_••••8f2a</span></p><button className="my-3 rounded bg-[#7652ed] px-4 py-2 font-sans text-xs font-bold text-white">Send again</button><p className="border-t border-[#26345e] pt-3 text-emerald-400">● 200 OK <span className="ml-4 text-slate-500">49 ms&nbsp; 62 bytes</span></p><pre className="mt-2 text-[#a9c5ff]">{`{\n  "lat": 38.7223,\n  "lng": -9.1393,\n  "country": "PT",\n  "confidence": 0.98\n}`}</pre><p className="mt-3 text-slate-500">Quota: 9,999 of 10,000 calls left</p><div className="mt-1 h-1 rounded bg-[#8057f4]"/></div></div>
+      </section>
 
-        <section className="mx-auto mt-14 max-w-4xl text-center">
-          <p className="mb-4 inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-            Secure API commerce, usage analytics, and admin control
-          </p>
-          <h1 className="text-4xl font-black tracking-tight text-white md:text-6xl">
-            Welcome to{" "}
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-fuchsia-400 bg-clip-text text-transparent">
-              API Marketplace
-            </span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
-            Connect, integrate, and scale with trusted APIs. Consumers discover and track usage;
-            admins approve, meter, and manage the platform from a modern command center.
-          </p>
-          {user && (
-            <Link
-              href={user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-cyan-100"
-            >
-              <span>Continue to your {user.role === "ADMIN" ? "admin" : "consumer"} portal</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          )}
-        </section>
+      <section id="catalog" className="scroll-mt-8 py-14"><h2 className="text-3xl font-bold">Browse the catalog</h2><p className="mt-2 max-w-lg text-sm text-slate-400">Filter by category, method, or provider. Every listing shows its price and real-world speed before you subscribe.</p><div className="mt-6 flex flex-wrap gap-2"><input placeholder="Search APIs or providers" className="w-full rounded-lg border border-[#26345e] bg-[#0a1230] px-3 py-2 text-xs outline-none placeholder:text-slate-500 sm:w-56"/>{["All", "Maps", "Finance", "Weather", "AI & text"].map((filter, i) => <button key={filter} className={`rounded-full border px-3 py-2 text-[10px] ${i === 0 ? "border-[#7060e7] bg-[#6c57e8] text-white" : "border-[#26345e] text-slate-300"}`}>{filter}</button>)}</div><div className="mt-3 overflow-x-auto rounded-xl border border-[#26345e]"><table className="w-full min-w-[720px] text-left text-xs"><thead className="border-b border-[#26345e] text-[9px] uppercase text-slate-500"><tr><th className="p-3">API</th><th>Provider</th><th>Method</th><th>Price per 1,000 calls</th><th>Median speed</th><th>Uptime</th><th/></tr></thead><tbody>{apis.map(([name, desc, provider, method, price, speed, uptime]) => <tr key={name} className="border-b border-[#1e2a4d] last:border-0"><td className="p-3"><b className="text-white">{name}</b><small className="mt-1 block text-[10px] text-slate-500">{desc}</small></td><td className="text-slate-300">{provider}</td><td><span className={`rounded px-2 py-1 text-[9px] ${method === "GET" ? "bg-[#253566] text-[#9db6ff]" : "bg-[#4a3926] text-amber-300"}`}>{method}</span></td><td className="font-mono text-[10px]">{price}</td><td className="font-mono text-[10px]">{speed}</td><td className="font-mono text-[10px] text-emerald-400">{uptime}</td><td><button onClick={() => openLogin()} className="font-semibold text-cyan-400">Subscribe</button></td></tr>)}</tbody></table></div><p className="mt-3 text-[10px] text-slate-500">Sample listings shown. Admins review every provider before an API is published.</p></section>
 
-        <section className="mt-10 grid gap-6 lg:grid-cols-3">
-          <SignInCard kind="admin" onDemoLogin={handleDemoLogin} loadingRole={loadingRole} />
-          <SignInCard kind="consumer" onDemoLogin={handleDemoLogin} loadingRole={loadingRole} />
-          <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d2437]/70 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-teal-300/30 bg-teal-300/10 text-teal-200">
-              <ShieldCheck className="h-8 w-8" />
-            </div>
-            <h2 className="text-xl font-semibold text-white">New User?</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Create a consumer account to browse APIs, subscribe to quota packs, and view analytics.
-            </p>
-            <ul className="mt-7 space-y-4 text-sm text-slate-300">
-              {["Browse and subscribe to APIs", "Manage your applications", "View usage and analytics"].map((item) => (
-                <li key={item} className="flex items-center gap-3">
-                  <span className="grid h-5 w-5 place-items-center rounded-full border border-teal-300/40 text-teal-200">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href={ROUTES.signup}
-              className="mt-8 flex w-full justify-center rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-3 text-sm font-bold text-[#03121f] shadow-[0_12px_30px_rgba(20,184,166,0.2)]"
-            >
-              Create Consumer Account
-            </Link>
-            <div className="mt-5 rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-4 text-xs leading-5 text-slate-300">
-              Admin access is seeded and protected. For admin invites, contact the API Marketplace team.
-            </div>
-          </article>
-        </section>
+      <section id="how-it-works" className="grid scroll-mt-8 gap-9 py-16 md:grid-cols-[.9fr_1fr]"><div><h2 className="max-w-sm text-3xl font-bold leading-tight">From first request to usage report</h2><div className="mt-6 space-y-6 border-l border-[#26345e] pl-6">{[["1", "Pick an API", "Compare price, speed, and uptime side by side, then subscribe to a quota pack that fits your traffic."], ["2", "Copy your key", "Your key is created when you subscribe. Send it as a Bearer token and your first call works right away."], ["3", "Watch your usage", "See calls, success rate, response times, and remaining quota. Refill before you run out."]].map(([n,title,copy]) => <div key={n} className="relative"><span className="absolute -left-10 grid h-6 w-6 place-items-center rounded-full bg-[#5c62ee] text-xs font-bold">{n}</span><h3 className="text-sm font-bold">{title}</h3><p className="mt-1 text-xs leading-5 text-slate-400">{copy}</p></div>)}</div></div><UsagePreview /></section>
 
-        {error && (
-          <p className="mx-auto mt-5 max-w-xl rounded-2xl border border-rose-400/25 bg-rose-400/10 p-4 text-center text-sm text-rose-200">
-            {error}
-          </p>
-        )}
-
-        <DashboardPreview />
-
-        <section className="mx-auto mt-12 grid max-w-6xl gap-4 text-sm text-slate-300 md:grid-cols-4">
-          {
-            // typed feature tuples so TS understands the Icon component type
-            (
-              [
-              [Sparkles, "Secure & Reliable", "Enterprise-grade key handling"],
-              [TrendingUp, "Scalable Platform", "Built to grow with your API catalog"],
-              [ShieldCheck, "Trusted APIs", "Quality APIs reviewed by admins"],
-              [CheckCircle2, "Developer First", "Docs, keys, logs, and usage in one place"],
-              ] as [ElementType, string, string][]
-            ).map(([Icon, title, copy]) => (
-              <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-lg text-cyan-300"><Icon className="h-5 w-5" /></p>
-                <p className="mt-2 font-semibold text-white">{title}</p>
-                <p className="mt-1 text-xs text-slate-400">{copy}</p>
-              </div>
-            ))
-          }
-        </section>
-
-        <footer className="py-10 text-center text-xs text-slate-500">
-          © 2026 API Marketplace. All rights reserved.
-        </footer>
-      </div>
-    </main>
-  );
+      <section id="signin" className="grid scroll-mt-12 items-center gap-10 py-16 md:grid-cols-2"><div><h2 className="max-w-sm text-3xl font-bold leading-tight">Get your key in about a minute</h2><ul className="mt-7 space-y-3 text-sm text-slate-400">{["Browse and subscribe. Pick APIs and buy quota packs.", "Manage your apps. Keep a separate key for each project.", "Track every request. Quota, speed, and status codes in one place."].map(item => <li key={item} className="flex gap-3"><Check className="h-4 w-4 shrink-0 text-emerald-400"/>{item}</li>)}</ul></div><div className="rounded-xl border border-[#26345e] bg-[#0d1734] p-5 shadow-[0_20px_65px_rgba(19,14,65,.4)]"><div className="mb-5 inline-flex rounded-lg bg-[#070d22] p-1 text-xs"><button onClick={() => selectRole("user")} className={`rounded px-3 py-2 ${role === "user" ? "bg-[#263565] text-white" : "text-slate-400"}`}>Sign in</button><button onClick={() => selectRole("admin")} className={`rounded px-3 py-2 ${role === "admin" ? "bg-[#263565] text-white" : "text-slate-400"}`}>Admin sign in</button></div><h2 className="text-lg font-bold">{CREDENTIALS[role].title}</h2><p className="mt-1 text-xs text-slate-400">{role === "admin" ? "For platform administrators. Approve APIs, manage providers, and review usage." : "Manage your APIs, subscriptions, and keys."}</p><form onSubmit={submit} className="mt-5 space-y-4"><label className="block text-xs font-bold">Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-lg border border-[#26345e] bg-[#060c20] px-3 py-3 text-sm font-normal outline-none focus:border-[#5f7fff]"/></label><label className="block text-xs font-bold">Password<input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="mt-2 w-full rounded-lg border border-[#26345e] bg-[#060c20] px-3 py-3 text-sm font-normal outline-none focus:border-[#5f7fff]"/></label>{error && <p className="text-xs text-rose-300">{error}</p>}<button disabled={loading} className="w-full rounded-lg bg-gradient-to-r from-[#407cff] to-[#8951ed] px-4 py-3 text-sm font-bold text-white disabled:opacity-60">{loading ? "Signing in..." : CREDENTIALS[role].button}</button></form><div className="mt-7 border-t border-[#26345e] pt-4 text-xs text-slate-400">{role === "admin" ? <>Not an admin? <button onClick={() => selectRole("user")} className="font-semibold text-white underline">Back to developer sign in</button></> : <>New here? <Link href={ROUTES.signup} className="font-semibold text-white underline">Create an account</Link> · <button onClick={() => selectRole("admin")} className="font-semibold text-white underline">Sign in as admin</button></>}</div></div></section>
+      {user && <Link href={user.role === "ADMIN" ? ROUTES.admin : ROUTES.dashboard} className="fixed bottom-5 right-5 rounded-full bg-cyan-400 px-4 py-3 text-xs font-bold text-[#041127] shadow-lg">Continue to dashboard <ChevronRight className="inline h-3 w-3"/></Link>}
+      <footer className="flex flex-col gap-3 border-t border-[#1b2850] py-7 text-[10px] text-slate-500 sm:flex-row sm:justify-between"><span>© 2026 API Marketplace</span><span className="flex gap-5"><a href="#catalog">Browse APIs</a><a href="#how-it-works">How it works</a><a href="#signin">Contact the team</a></span></footer>
+    </div>
+  </main>;
 }
